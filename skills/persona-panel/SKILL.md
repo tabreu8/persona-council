@@ -5,10 +5,11 @@ description: Convene several personas on one question - to judge it (fanout, cha
 
 # persona-panel
 
-> **Shared references.** This skill cites files like `panel-topologies.md`. They
-> live at `.claude/persona-council/<file>` when installed with
-> `npx persona-council init`, or at `${CLAUDE_PLUGIN_ROOT}/reference/<file>`
-> when installed as a plugin. Try the first path, fall back to the second.
+> **Shared references.** This skill cites files like `panel-topologies.md`. Try,
+> in order: `.claude/persona-council/<file>` (installed with `npx persona-council
+> init`), `${CLAUDE_PLUGIN_ROOT}/reference/<file>` (Claude Code plugin install),
+> then `references/<file>` in this skill's own directory (installed with
+> `npx skills add` or any other Agent Skills-compatible installer).
 
 Convene a group of personas on one question and report what they actually
 disagree about.

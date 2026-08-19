@@ -355,6 +355,20 @@ npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md
 /plugin install persona-council@persona-council
 ```
 
+**Any Agent Skills-compatible agent** — Cursor, Cline, and others besides Claude
+Code, via [Vercel's open standard](https://github.com/vercel-labs/skills):
+
+```bash
+npx skills add tabreu8/persona-council
+```
+
+Installs just the six skills — no CLI, no memory journal, no `doctor`. Each one
+carries its own `references/` copy of the docs it cites (derived from the same
+source the other two installs share, kept in sync by a test — see
+`scripts/sync-skill-references.mjs`), so it works standalone with nothing else
+from this repo. Reach for the npm or plugin install first if you want the full
+command surface; this one exists for agents that only speak the Skills standard.
+
 Re-running `init` never clobbers a file you've edited unless you pass `--force`.
 
 ```
@@ -451,7 +465,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 72 tests, `node --test`, no framework — including a
+Zero runtime dependencies. 76 tests, `node --test`, no framework — including a
 guard that every field the docs tell an agent to record actually reaches the
 memo, because "recorded and silently dropped" has been the most common bug here.
 

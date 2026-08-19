@@ -5,10 +5,11 @@ description: Query one saved persona in an isolated sub-agent that sees only a c
 
 # persona-ask
 
-> **Shared references.** This skill cites files like `resolving-personas.md`.
-> They live at `.claude/persona-council/<file>` when installed with
-> `npx persona-council init`, or at `${CLAUDE_PLUGIN_ROOT}/reference/<file>`
-> when installed as a plugin. Try the first path, fall back to the second.
+> **Shared references.** This skill cites files like `resolving-personas.md`. Try, in
+> order: `.claude/persona-council/<file>` (installed with `npx persona-council
+> init`), `${CLAUDE_PLUGIN_ROOT}/reference/<file>` (Claude Code plugin install),
+> then `references/<file>` in this skill's own directory (installed with
+> `npx skills add` or any other Agent Skills-compatible installer).
 
 Run one persona in a fresh sub-agent that has never seen this conversation, and
 bring back a structured verdict.

@@ -5,9 +5,11 @@ description: Record what actually happened after a decision a panel weighed in o
 
 # persona-retro
 
-> **Shared references.** This skill cites files like `memory.md`. They live at
-> `.claude/persona-council/<file>` when installed with `npx persona-council init`,
-> or at `${CLAUDE_PLUGIN_ROOT}/reference/<file>` when installed as a plugin.
+> **Shared references.** This skill cites files like `memory.md`. Try, in order:
+> `.claude/persona-council/<file>` (installed with `npx persona-council init`),
+> `${CLAUDE_PLUGIN_ROOT}/reference/<file>` (Claude Code plugin install), then
+> `references/<file>` in this skill's own directory (installed with
+> `npx skills add` or any other Agent Skills-compatible installer).
 
 Close the loop. A council nobody ever checks is just a more elaborate way to
 have an opinion.

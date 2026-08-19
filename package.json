@@ -1,6 +1,6 @@
 {
   "name": "persona-council",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your agent. For any decision, not just code.",
   "type": "module",
   "bin": {
@@ -24,7 +24,9 @@
   ],
   "scripts": {
     "test": "node --test",
-    "prepublishOnly": "node --test"
+    "prepublishOnly": "node --test",
+    "sync-skill-refs": "node scripts/sync-skill-references.mjs",
+    "sync-skill-refs:check": "node scripts/sync-skill-references.mjs --check"
   },
   "keywords": [
     "claude",

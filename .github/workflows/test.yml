@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --test
+      # Also its own named step: a drift failure buried inside node --test's
+      # TAP output is easy to miss; this makes the reason visible at a glance
+      # in the Actions UI, the same way npm --version is broken out elsewhere.
+      - run: npm run sync-skill-refs:check
       # The tarball a user actually gets: pack it, install it cold, run init.
       - run: npm pack
       - run: npm install --prefix smoke ./persona-council-*.tgz

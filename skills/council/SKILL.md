@@ -5,8 +5,10 @@ description: Entry point for persona work — routes a request to the right pers
 
 # council
 
-> **Shared references.** Files cited here live at `.claude/persona-council/<file>`
-> (npx install) or `${CLAUDE_PLUGIN_ROOT}/reference/<file>` (plugin install).
+> **Shared references.** Files cited here are tried, in order, at
+> `.claude/persona-council/<file>` (npx install), `${CLAUDE_PLUGIN_ROOT}/reference/<file>`
+> (plugin install), then `references/<file>` in this skill's own directory
+> (installed with `npx skills add` or any other Agent Skills-compatible installer).
 
 One door. Read the request, pick the capability, do not make the user learn five
 command names.
