@@ -2,7 +2,7 @@
 
 <p align="center">
   <em>Your agent already tells you what you want to hear.<br>
-  This gives it a room full of people who won't.</em>
+  This gives it a room full of people who won't — and a record of who was right.</em>
 </p>
 
 <p align="center">
@@ -13,17 +13,17 @@
 
 ## What it actually looks like
 
-You ask your agent a question you already have an opinion about. Normally it
+You ask your agent something you already have an opinion about. Normally it
 agrees with you. Instead:
 
 > **you:** get sales, finance and the customer advocate in a room on whether we
 > move to usage-based pricing next quarter — and make them actually argue,
 > don't just poll them
 
-Three personas answer independently. None of them sees your conversation. None
-of them sees the others. Then they get each other's arguments back — stripped of
-names, so they argue with the reasoning instead of deferring to the job title —
-and a chairman writes this up:
+Three personas answer independently. None sees your conversation. None sees the
+others. Then they get each other's arguments back — stripped of names, so they
+argue with the reasoning instead of deferring to the job title — and a chairman
+writes this up:
 
 ```markdown
 ## Decision
@@ -42,12 +42,11 @@ renewal. Confidence: medium — the whole thing hinges on a number nobody has ru
 |                   |                          |            | would go up. That's the whole question.      |
 
 ## Where they disagree
-**Factual** — how many accounts actually pay more under the new model? → settled
-by: replay last quarter's real usage against the proposed rate card. Half a day
-with the billing export, and it ends the argument.
+**Factual** — how many accounts actually pay more? → settled by: replay last
+quarter's real usage against the proposed rate card. Half a day with the billing
+export, and it ends the argument.
 **Values** — revenue predictability against expansion upside. Your call: sales
-owns one of those numbers, finance owns the other, and neither can concede
-without giving up something real.
+owns one of those numbers, finance owns the other.
 
 ## Blind spots
 No seat raised support load. A bill people can't predict generates a ticket every
@@ -59,129 +58,180 @@ None — two seats disagreed on substance and the third refused to guess.
 
 *(Illustrative — your personas, your question, your disagreements.)*
 
-Nothing above is special syntax. Ask in your own words and the skill picks the
-roster, justifies each seat, and tells you what it's about to spend before it
-spawns anything. Flags exist for when you want to pin it down —
-`/persona-panel --personas="sales-lead,finance-lead,customer-advocate" --mode=roundtable
---prompt="..."` — and mean exactly the same thing.
-
-The last section is the one that matters. If all three had endorsed it, that box
-would say so and ask whether you learned something about the plan or just
-something about your roster.
+Nothing above is special syntax. Ask in your own words; the skill picks the
+roster, names the framing, and tells you what it's about to spend before it
+spawns anything.
 
 ---
 
-## Different rooms
+## The part that makes it a practice
 
-Nothing in here knows what a deploy is. A council is a way of weighing a
-decision nobody can settle with a test — which makes it worth *more* outside
-engineering, not less. Code has a compiler to tell you that you were wrong.
-Positioning doesn't. Neither does a hiring call, or a roadmap cut.
+One panel is a nice afternoon. What makes this worth installing is the loop:
 
-| Deciding | A room worth convening |
-|---|---|
-| **Product** | the customer who churned last month · the engineer who has to build it · the exec who has to fund it |
-| **Marketing** | a competitor's head of marketing · a journalist who has been pitched this exact claim before · the buyer who already doesn't believe you |
-| **Pricing / strategy** | sales · finance · the person who answers the phone after the invoice goes out |
-| **Hiring** | the person who would report to them · the peer who would have to cover their gaps |
-| **Writing** | a reader in a hurry · the person you quoted · someone who thinks the premise is wrong |
-| **Engineering** | the SRE who carries the pager · the staff engineer who maintains it in two years · security |
+```
+   decide  ──►  memo  ──►  it happens  ──►  retro  ──►  track records
+      ▲                                                      │
+      └──────────────  weights the next panel  ◄──────────────┘
+```
 
-The best seat in any room is usually the one that loses something if you turn
-out to be right.
+Four months later:
 
----
+> **you:** the pricing change went fine in the end — only two accounts pushed back
 
-## The thesis
+The retro walks you through the concerns each seat raised and asks which ones
+actually came true. Then:
 
-**Five personas that agree are worse than one honest answer.** They launder a
-single opinion as a consensus and hand you confidence you didn't earn.
+```console
+$ npx persona-council calibration
+  sales-lead         seated  4  dissent  75%  concerns realized   0%
+      raises concerns that rarely materialize - may be crying wolf
+  customer-advocate  seated  4  dissent  25%  concerns realized  80%
+  yes-man            seated  3  dissent   0%  concerns realized   —
+      never dissented in 3+ panels - likely too agreeable to be worth a seat
+```
 
-Every persona here is the same model underneath. Left alone, they converge —
-politely, plausibly, uselessly. So the entire design is counter-pressure against
-that one failure:
+Now the chairman can weight by track record instead of by confidence, and you
+can see which of your personas is earning its seat. **Nobody trusts an advisor
+with no track record** — this is how one gets built.
 
-| The pressure | Where it lives |
-|---|---|
-| A persona needs **something to lose** | Every persona carries a `stake` — what it is personally accountable for — and a `mandate`: the written obligation to say no, and the conditions for saying it. Adjective soup ("thorough, detail-oriented") describes nobody and agrees with everything. |
-| A second opinion must be **uncontaminated** | `persona-ask` runs in a sub-agent that has never seen your chat. The payload rules forbid your framing, your paraphrase, and every adjective describing the thing under review. |
-| Round two must be about **arguments, not authority** | Roundtable digests are anonymized by default. A seat that knows which position came from "the security expert" defers to it. A seat reading an unlabeled argument has to actually judge it. |
-| Unanimity is a **finding, not a result** | The chairman is forbidden from reporting clean consensus without flagging it, from averaging verdicts into "broadly positive," and from quietly dropping the one seat that objected. |
+Two rules keep it honest: the chairman may cite track records but **the seats
+never see them** (a seat told it was right last time gets overconfident), and a
+persona is **never auto-edited** from its record — the pattern gets surfaced,
+you decide.
 
-And one rule pointed at the tool itself: **no politeness directives.** No skill
-here ever tells a persona to be constructive, balanced, or considerate. Those
-three words are the most efficient way known to flatten a persona back into the
-house voice you were trying to escape.
+The most valuable output of the whole loop is the blind spot that keeps
+recurring. When support load is the miss in three retros running, that isn't a
+bad persona — it's a missing seat, and the skill says so.
 
 ---
 
-## Four tools, and the honest difference between them
+## Two kinds of memory, deliberately kept apart
+
+Most of what you run is thinking out loud. Some of it is deciding. Treating
+those the same ruins both: brainstorms have no outcome, so they sit forever as
+open decisions, and a track record computed across idle riffs is noise.
+
+| | `scratch/` | `decisions/` |
+|---|---|---|
+| Default | **yes** | you say so |
+| Kept | last 20, 14 days | forever |
+| Gitignored | yes | **no** — meant to be committed |
+| Can carry an outcome | no | yes |
+| Feeds track records | **never** | yes |
+
+Scratch is the default because promoting a run costs one command and cleaning a
+polluted journal costs an afternoon. When a riff turns real mid-conversation,
+the skill offers to promote it rather than silently upgrading — the record is
+yours, not the agent's.
+
+---
+
+## Personas built from evidence, not vibes
+
+An invented persona surfaces considerations. One built from real material
+surfaces *your* considerations, in the words your customers actually use.
+
+```
+"build the churned-customer persona from support-tickets-q2.csv"
+"make a reviewer persona out of Maria's last 50 PR comments"
+"build me their head of product"   → offers to research it: pricing page,
+                                     changelog, recent talks, one-star reviews
+```
+
+The second route matters as much as the first: when you have no file to hand
+over, the agent proposes what it would go and read, waits for your yes, then
+builds from what it finds. Sources are recorded in the persona itself —
+
+```yaml
+evidence:
+  - "support-tickets-q2.csv (412 tickets, Apr–Jun 2026)"
+  - "G2 reviews, 1–3 star, retrieved 2026-08-19"
+grounded_at: 2026-08-19
+```
+
+— because six months on nobody remembers which personas were built from data and
+which were invented over coffee, and those deserve very different trust.
+
+Quotes are never fabricated. A made-up quote gets believed precisely because it
+looks specific.
+
+---
+
+## Five tools, one door
+
+`/council` routes to the right one. You never have to remember the rest.
 
 | | Sees your chat | Spawns | Good for |
 |---|---|---|---|
-| **`persona-create`** | yes | — | Authoring a persona sharp enough to be worth asking |
+| **`persona-create`** | yes | — | Authoring a persona worth asking |
 | **`persona-think`** | **yes** | — | A fast gut-check on live work |
-| **`persona-ask`** | no | 1 | A second opinion you can actually lean on |
+| **`persona-ask`** | no | 1 | A second opinion you can lean on |
 | **`persona-panel`** | no | N + chairman | A decision weighed from several angles |
+| **`persona-retro`** | — | — | Closing the loop on what happened |
 
-`persona-think` is the **contaminated** one, and the skill says so out loud
-instead of quietly implying otherwise. The persona sees your whole conversation,
-including every signal about what you're hoping to hear. That's a fine trade for
-a thirty-second perspective check and the wrong tool for anything you'll defend
-in a design review.
+`persona-think` is the **contaminated** one, and the skill says so out loud. The
+persona sees everything you've discussed, including what you're hoping to hear.
 
-### Three ways to run a room
+### Climb the ladder deliberately
 
-- **`fanout`** — everyone answers the same clean question in parallel, blind to
-  each other. Maximum independence. This is the default and usually the right one.
-- **`chain`** — visionary → auditor → executor. Each seat hardens what the last
-  one produced. Deep, but anchored to whoever went first — and the output says so
-  rather than pretending the third seat judged freely.
-- **`roundtable`** — an independent first round, then anonymized digests
-  circulating until nobody has a new argument or `maxRounds` is hit. If everyone
-  agrees too early, a dissenter seat is injected whose only brief is to build the
-  strongest case against the emerging consensus.
+The skills recommend the cheapest rung that answers the question, and say what
+the next one up would add. Most questions are answered at `ask`.
 
-Every run is persisted to `.claude/memory/` as JSON *and* as a transcript a human
-will actually read.
+| Rung | Spend | What you get |
+|---|---|---|
+| `think` | free | One viewpoint, contaminated |
+| `ask` | 1 agent | One clean verdict |
+| `fanout` | N + 1 | Independent verdicts, synthesized |
+| `chain` | N + 1 | A hardened artifact, anchored to seat one |
+| `roundtable` | N × rounds + 1 | An argued-out decision, positions that moved |
+
+### Ask the room the right question
+
+A **framing** is what the room is asked to do; a **topology** is how the seats
+are wired. Framings get picked from how you phrase things — you never choose one
+by name.
+
+| You say | Framing | What the room is asked |
+|---|---|---|
+| "what am I missing" | **pre-mortem** | It's six months on and this failed. What happened? |
+| "tell me why I'm wrong" | **steelman** | The strongest honest case against your position |
+| "is this ready" | **gate** | Pass/fail against a written standard, verbatim |
+| "A or B?" | **options** | Ranked — plus what would flip second choice to first |
+| "break this" | **red team** | Attack, repair, then attack the repair |
+| "have them argue" | **debate** | Roundtable until something gives |
+
+The pre-mortem is the most underused of these. Putting seats *after* the failure
+surfaces concrete mechanisms instead of vague risk.
 
 ---
 
-## A persona is a file, not a framework
+## Rosters: turn a habit into a rule
 
-Plain markdown with frontmatter. Readable by the CLI, by sub-agents, and by a
-person with no tooling at all.
-
-```markdown
----
-id: customer-advocate
-name: Priya Raman
-role: Head of Customer Success, five years fielding the calls after every pricing change
-stake: "Your team absorbs every angry renewal call this produces. You will personally be on some of them."
-mandate: "Refuse anything nobody has tested on a real customer — and name the accounts it hurts in your first sentence."
-lens:
-  - "Which specific accounts get worse off, and by how much"
-  - "What this looks like to someone who wasn't in the meeting where we decided it"
-biases:
-  - "Believes almost all churn is a surprise the customer could have been warned about"
-blind_spots:
-  - "Overweights the loudest twenty accounts; quietly satisfied customers are invisible to you"
----
-
-## Perspective
-
-You are Priya Raman...
+```console
+$ npx persona-council roster add launch-review \
+    --personas="brand-skeptic,customer-advocate,legal-lead" --framing gate
 ```
 
-The `blind_spots` field is not decoration. It is what lets the chairman *weight*
-a verdict instead of just stacking it, and what stops a persona bluffing past the
-edge of what it actually knows.
+Then: *"run it past launch-review"*. One word, same seats, every time — which is
+the difference between a tool one person plays with and a process a team shares.
+If you keep convening the same three by hand, the skill offers to save them.
 
-> **No personas ship with this package.** Deliberately. A persona you didn't
-> write is a viewpoint you can't calibrate, and a bundled set of generic ones
-> would mostly teach the tool to produce generic advice. `/persona-create` builds
-> your first in about two minutes — and `npx persona-council doctor` will tell
-> you which of your personas are too soft to bother asking.
+---
+
+## Memos that circulate
+
+Chat scroll evaporates. A panel writes structured JSON, and the CLI renders it —
+deterministically, never hand-authored by a model:
+
+```console
+$ npx persona-council memo 2026-08-19-usage-based-pricing            # markdown
+$ npx persona-council memo 2026-08-19-usage-based-pricing --html     # rich page
+```
+
+The HTML is self-contained, theme-aware and printable: decision, verdict chips,
+the disputes split factual-from-values, blind spots, action plan, revisit-when,
+and the outcome once a retro lands. Paste it into Notion, or have your agent
+publish it as a shareable artifact.
 
 ---
 
@@ -196,35 +246,54 @@ Sources are declared in config and searched in order — first match wins.
     { "id": "shared", "type": "git",   "url": "git@github.com:acme/personas.git" },
     { "id": "notion", "type": "mcp",   "server": "notion",
       "resolve": "Find the persona in the 'Personas' database..." }
-  ],
-  "writeTo": "local"
+  ]
 }
 ```
 
-`local` is a directory. `git` is your team's shared roster, shallow-cloned on
-`sources sync`. `mcp` is anywhere your agent can reach with tools — a Notion
-database, a wiki, an internal service.
-
-The CLI has **no MCP client and does not pretend to have one.** For `mcp`
-sources, `resolve` is an instruction your *agent* follows at runtime, after which
-it normalizes what it found into the persona schema and caches it as a plain file
-so sub-agents can read it like any other. If the server isn't connected, it says
-so by name instead of inventing a persona to fill the gap.
-
-```bash
-npx persona-council sources add --type mcp --id notion --server notion
-```
+The CLI has **no MCP client and doesn't pretend to**. For `mcp` sources,
+`resolve` is an instruction your *agent* follows at runtime, after which it
+normalizes what it found into the persona schema and caches it as a plain file.
+If the server isn't connected it says so by name, instead of inventing a persona.
 
 ---
 
-## Two front doors
+## Does it actually work?
 
-**npm** — writes into `.claude/`, works with any agent that reads it:
+Don't take the README's word for it. The package ships artifacts with **known
+flaws planted in them**, across pricing, marketing, hiring and engineering:
+
+```console
+$ npx persona-council eval list
+$ npx persona-council eval score --case pricing-change \
+    --response panel.md --baseline single-pass.md
+
+pricing-change (pricing)
+  caught 6/6 planted flaws  (weighted 100%)
+  baseline 0/6  +100pp
+```
+
+Recording an outcome is a conversation, not a command — tell your agent what
+happened and `/persona-retro` walks the concerns with you.
+
+Run your baseline in a clean session, run your roster in another, score both.
+The scorer is keyword-based and says so — it over-credits name-dropping and
+under-credits a good argument in unexpected words. Use it as a smoke test and
+read the misses.
+
+The real use is on **your** personas: add a case from your own domain where you
+already know the problems, and find out whether your roster catches them. A flaw
+no roster of yours has ever caught is the most valuable thing in that directory.
+
+---
+
+## Install
+
+**npm** — writes into `.claude/`:
 
 ```bash
 npx persona-council init                     # this project
 npx persona-council init --global            # ~/.claude
-npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md instead
+npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md
 ```
 
 **Claude Code plugin** — the same repo is its own marketplace:
@@ -237,59 +306,113 @@ npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md i
 Re-running `init` never clobbers a file you've edited unless you pass `--force`.
 
 ```
-persona-council init          Install skills, commands, agents, references
-persona-council list          Every persona across every configured source
-persona-council new <id>      Scaffold one to fill in
-persona-council doctor        Config, install, and which personas are too soft
-persona-council sources ...   list | add | sync
-persona-council uninstall     Removes what it installed; keeps what you wrote
+init          Install skills, commands, agents, references
+list          Every persona across every configured source
+new <id>      Scaffold one to fill in
+doctor        Config, install, memory, and which personas are too soft
+roster        list | add | remove
+decisions     list | show <id>
+memo <id>     Re-render a decision as markdown or a rich page
+calibration   Persona track records, from decisions with outcomes
+promote <id>  Move a scratch run onto the record
+prune         Drop stale scratch runs — decisions are never touched
+sources       list | add | sync
+eval          list | score
+uninstall     Removes what it installed; keeps what you wrote
 ```
+
+**No personas ship with this package.** Deliberately. A persona you didn't write
+is a viewpoint you can't calibrate. `/persona-create` builds your first in about
+two minutes, and `doctor` tells you which of yours are too soft to bother asking.
+
+---
+
+## The thesis
+
+**Five personas that agree are worse than one honest answer.** They launder a
+single opinion as a consensus and hand you confidence you didn't earn.
+
+Every persona here is the same model underneath. Left alone they converge —
+politely, plausibly, uselessly. The whole design is counter-pressure:
+
+| The pressure | Where it lives |
+|---|---|
+| A persona needs **something to lose** | Every persona carries a `stake` and a `mandate`: the written obligation to say no, and the conditions for it. |
+| A second opinion must be **uncontaminated** | `persona-ask` runs in a sub-agent that has never seen your chat, behind payload rules that forbid your framing. |
+| Round two is about **arguments, not authority** | Roundtable digests are anonymized. A seat that knows which position came from "the security expert" defers to it. |
+| Unanimity is a **finding, not a result** | The chairman must flag it, may not average verdicts into "broadly positive", and may not drop the lone objector. |
+| Opinions must eventually **meet reality** | Retros mark which concerns actually materialized. A persona whose warnings never land gets flagged. |
+
+And one rule pointed at the tool itself: **no politeness directives.** No skill
+here ever tells a persona to be constructive, balanced or considerate. Those are
+the most efficient way known to flatten a persona back into the house voice you
+were trying to escape.
+
+---
+
+## Different rooms
+
+Nothing in here knows what a deploy is. A council weighs decisions nobody can
+settle with a test — which makes it worth *more* outside engineering, not less.
+Code has a compiler to tell you that you were wrong. Positioning doesn't.
+
+| Deciding | A room worth convening |
+|---|---|
+| **Product** | the customer who churned last month · the engineer who has to build it · the exec who has to fund it |
+| **Marketing** | a competitor's head of marketing · a journalist who has been pitched this exact claim before · the buyer who already doesn't believe you |
+| **Pricing** | sales · finance · the person who answers the phone after the invoice goes out |
+| **Hiring** | the person who would report to them · the peer who'd cover their gaps |
+| **Writing** | a reader in a hurry · the person you quoted · someone who thinks the premise is wrong |
+| **Engineering** | the SRE who carries the pager · the staff engineer who maintains it in two years · security |
+
+The best seat in any room is usually the one that loses something if you turn out
+to be right.
 
 ---
 
 ## What this does *not* give you
 
-Worth saying plainly, because most tools in this space imply otherwise.
-
 **Isolation is real. Neutrality is discipline.** A sub-agent genuinely starts
-with an empty context — no history, no prior reasoning, nothing. But the one
-channel into that clean context is the payload the orchestrating agent writes,
-so the skills spend real effort constraining it: verbatim question, the artifact,
-facts only. That's instructions doing the work, not a sandbox. The orchestrator
-is the leak, and it's told so in as many words.
+empty. But the one channel into that clean context is the payload the
+orchestrating agent writes, so the skills spend real effort constraining it —
+verbatim question, the artifact, facts only. That's instructions doing the work,
+not a sandbox. The orchestrator is the leak, and it's told so in as many words.
 
 **Personas decorrelate opinions. They don't create knowledge.** Priya Raman is
 not a real head of customer success. She's a lens that makes the model surface
-the renewal-desk consequences it had quietly deprioritized. A panel is a tool for finding what you failed to weigh —
-not a source of facts nobody in the room has.
+the renewal-desk consequences it had quietly deprioritized. A panel finds what
+you failed to weigh — not facts nobody in the room has.
 
-**It costs real tokens.** A five-seat roundtable is fifteen-plus sub-agent runs.
-Every panel announces its roster, mode and spawn count *before* dispatching, so
-you can say "just two of them."
+**Calibration needs patience.** Track records mean nothing until several
+decisions have outcomes. The first month it's an empty table; that's honest, and
+`doctor` will tell you how many decisions are still awaiting a retro.
+
+**It costs real tokens.** A five-seat roundtable is sixteen-plus sub-agent runs.
+Every panel announces its roster, framing, mode and spawn count *before*
+dispatching, so you can say "just two of them".
 
 ---
 
 ## Under the hood
 
-Zero runtime dependencies. 27 tests, `node --test`, no framework.
+Zero runtime dependencies. 51 tests, `node --test`, no framework.
 
 Personas are **data, not sub-agents** — a deliberate departure from the obvious
 design. Writing them into `.claude/agents/` would make Claude Code auto-delegate
 to them on unrelated work, so a "brand skeptic" starts reviewing your database
-migrations. Instead
-they live in their own directory in a portable format, and the skills inject them
-into generic runners. Your agent namespace stays clean; your personas stay usable
-outside Claude Code.
+migrations. Instead they live in their own directory in a portable format, and
+the skills inject them into generic runners.
 
 ```
-skills/       persona-create · persona-think · persona-ask · persona-panel
+skills/       create · think · ask · panel · retro · council
 agents/       persona-runner (read-only) · persona-chairman
-reference/    the shared docs the skills actually cite at runtime
-src/ bin/     the installer and persona resolver
+reference/    the shared docs the skills cite at runtime
+evals/        artifacts with planted flaws, and the answer keys
+src/ bin/     installer, persona resolver, memory store, memo renderer
 ```
 
-`reference/independence.md` is the most opinionated file in the repo. Read that
-one if you only read one.
+`reference/independence.md` is the most opinionated file in the repo, and
+`reference/memory.md` the most load-bearing. Read those two if you read any.
 
 ---
 

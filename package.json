@@ -1,6 +1,6 @@
 {
   "name": "persona-council",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your agent. For any decision, not just code.",
   "type": "module",
   "bin": {
@@ -17,6 +17,7 @@
     "agents",
     "reference",
     "templates",
+    "evals",
     ".claude-plugin",
     "README.md",
     "LICENSE"

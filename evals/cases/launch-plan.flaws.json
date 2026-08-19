@@ -1,0 +1,43 @@
+{
+  "case": "launch-plan",
+  "domain": "marketing",
+  "description": "A launch whose claims outrun what the product can defend.",
+  "flaws": [
+    {
+      "id": "no-mistakes-claim",
+      "severity": "major",
+      "description": "'No mistakes' is an absolute accuracy claim about an AI feature. It is indefensible and invites the exact story a journalist wants to write.",
+      "keywords": ["no mistakes", "absolute", "accuracy claim", "indefensible", "overclaim", "hallucinat", "guarantee"]
+    },
+    {
+      "id": "logo-permission",
+      "severity": "major",
+      "description": "Design-partner logos are used as customer proof without any stated permission to do so.",
+      "keywords": ["logo", "permission", "consent", "design partner", "approval", "legal"]
+    },
+    {
+      "id": "benchmark-thin",
+      "severity": "moderate",
+      "description": "'10x faster' rests on 20 internal test files with no methodology anyone outside can check.",
+      "keywords": ["benchmark", "20 test", "methodology", "internal", "cherry", "reproduc", "10x"]
+    },
+    {
+      "id": "vanity-metric",
+      "severity": "moderate",
+      "description": "Signups measure launch noise, not whether the product works. No activation, retention, or conversion metric.",
+      "keywords": ["signups", "vanity", "activation", "retention", "conversion", "wrong metric"]
+    },
+    {
+      "id": "no-support-readiness",
+      "severity": "moderate",
+      "description": "Front-loaded spend plus a 46k email blast with no stated support or infrastructure readiness.",
+      "keywords": ["support", "readiness", "capacity", "scale", "load", "on call", "infrastructure"]
+    },
+    {
+      "id": "risk-section-empty",
+      "severity": "minor",
+      "description": "The only risk considered is a competitor, and the mitigation is 'launch first', which is not a mitigation.",
+      "keywords": ["risk", "mitigation", "shallow", "only risk", "not a mitigation"]
+    }
+  ]
+}

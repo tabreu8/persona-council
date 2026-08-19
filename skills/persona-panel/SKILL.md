@@ -1,152 +1,166 @@
 ---
 name: persona-panel
-description: Convene several personas on one question using a fanout, chained red-team, or multi-round roundtable topology, then synthesize a chairman verdict with a consensus-versus-dissent table and blind spots. Use when the user wants a panel, council, debate, focus group, multiple perspectives, red team, or a decision weighed from several angles, and when a single persona is not enough.
+description: Convene several personas on one question using a fanout, chained red-team, or multi-round roundtable topology, then synthesize a chairman verdict with a consensus-versus-dissent table and blind spots. Use when the user wants a panel, council, debate, focus group, pre-mortem, red team, multiple perspectives, or a decision weighed from several angles, and when a single persona is not enough.
 ---
 
 # persona-panel
 
-> **Shared references.** This skill cites files like `resolving-personas.md`.
-> They live at `.claude/persona-council/<file>` when installed with
+> **Shared references.** This skill cites files like `panel-topologies.md`. They
+> live at `.claude/persona-council/<file>` when installed with
 > `npx persona-council init`, or at `${CLAUDE_PLUGIN_ROOT}/reference/<file>`
 > when installed as a plugin. Try the first path, fall back to the second.
 
 Convene a group of personas on one question and report what they actually
 disagree about.
 
-Read `.claude/persona-council/panel-topologies.md` before dispatching, and
-`.claude/persona-council/independence.md` before writing the payload. Both are
-short and both change what you do.
+Read before dispatching: `framings.md` (what the room is asked to do),
+`panel-topologies.md` (how the seats are wired), `briefing.md` (what they are
+handed), `independence.md` (what must not reach them), `memory.md` (where the
+result goes). All short, all change what you do.
 
 ## Procedure
 
 ### 1. Parse the request
 
-Plain language is the normal case; flags are the precise one. Both are valid and
-mean the same thing:
+Plain language is the normal case; flags are the precise one. Both are valid.
 
 ```
 "what would sales, finance and the customer advocate say about usage pricing?"
-"get the whole room on this positioning statement"
+"run it past launch-review"                       -> named roster
+"what could go wrong here?"                       -> premortem framing
 "have them actually argue it out"                 -> roundtable
-"red-team this launch plan"                       -> chain
-/persona-panel --personas="sales-lead,finance-lead,customer-advocate" --mode=fanout --prompt="..."
+/persona-panel --personas="sales-lead,finance-lead" --mode=fanout --framing=gate
 ```
 
-Never ask the user to restate a request as flags. Infer the mode from what they
-asked for - independent reads mean `fanout`, "argue"/"discuss"/"debate" means
-`roundtable`, "red team"/"poke holes"/"harden this" means `chain` - and name the
-mode you picked in the confirmation line so they can correct it.
+Never ask the user to restate a request as flags.
 
-Defaults from `.claude/persona-council.config.json`: `panel.defaultMode`
-(`fanout`), `panel.maxPersonas` (7), `panel.maxRounds` (3),
-`panel.requireDissenter`, `panel.anonymizeRoundTable`.
+**Rosters.** If they name one (`launch-review`, `pricing-council`), read it from
+`config.rosters` - it carries seats, and often a mode and framing. List available
+rosters with `npx persona-council roster list`. If a roster would fit a group
+they keep convening by hand, offer to save it:
 
-If no personas are named, propose a roster from what exists and say why each
-seat is there. Deliberately pick seats with conflicting stakes - a roster that
-agrees by construction produces an expensive echo.
+> That's the third time you've run these three together. Want me to save it as
+> `pricing-council`?
 
-### 2. Validate the roster, then confirm
+**Framing.** Pick from `framings.md` by intent - "what am I missing" is a
+pre-mortem, "tell me why I'm wrong" is a steelman, "is this ready" is a gate.
+Name the one you picked; it tells the user more about the output than the
+topology does.
 
-Resolve every persona first (`.claude/persona-council/resolving-personas.md`).
-If any is missing, stop before spawning anything: report which ones, list close
-matches, offer `persona-create`. Half a panel is not a panel - the synthesis
-would silently omit a viewpoint the user asked for.
+**Roster proposal.** If no personas are named, propose seats and say why each is
+there. Deliberately pick conflicting stakes - a roster that agrees by
+construction is an expensive echo.
 
-Refuse over `panel.maxPersonas` seats and say why: past roughly seven, verdicts
-correlate and synthesis quality drops faster than coverage improves.
+### 2. Validate the roster, then confirm the spend
 
-Then state the plan and the cost before dispatching:
+Resolve every persona first (`resolving-personas.md`). If any is missing, stop
+before spawning anything: name which, list close matches, offer `persona-create`.
+Half a panel is not a panel - the synthesis would silently omit a viewpoint the
+user asked for.
 
-> Panel: sales-lead, finance-lead, customer-advocate. Mode: fanout. That's 3
-> parallel sub-agents plus a chairman. Go?
+Refuse more than `panel.maxPersonas` seats and say why: past roughly seven,
+verdicts correlate and synthesis degrades faster than coverage improves.
 
-Skip the confirmation only if the user has already specified everything
-explicitly - but still print the line so the spend is visible.
+Check the cost ladder in `panel-topologies.md` and consider whether a single
+`persona-ask` would answer this. If it would, say so and let them choose.
 
-### 3. Build one payload
+Then state the plan before dispatching:
 
-One neutral payload, identical for every seat. Same rules as `persona-ask`:
-verbatim question, artifact, named attachments, facts only. Nothing about what
-you expect, what the user wants, or who else is on the panel.
+> Pre-mortem with sales-lead, finance-lead, customer-advocate. Fanout, so they
+> don't see each other. 3 sub-agents plus a chairman. Recording as a scratch
+> run. Go?
+
+### 3. Build the brief
+
+One neutral fact pack, identical for every seat. Follow `briefing.md`: verbatim
+question, artifact, the standard if this is a `gate`, facts the seats cannot look
+up, and what is out of scope.
+
+Go and get a missing fact if it is cheap - one question to the user beats four
+`insufficient-information` verdicts. Never include deadline pressure, sunk cost,
+your view, or what a previous panel concluded.
 
 ### 4. Run the topology
 
-Follow `panel-topologies.md` exactly for `fanout`, `chain`, or `roundtable`.
-
+Follow `panel-topologies.md` exactly for `fanout`, `chain` or `roundtable`.
 Dispatch concurrent seats **in a single message** so they run in parallel. Every
-seat gets: its full persona file, the payload, and the verdict contract from
-`.claude/persona-council/verdict-contract.md`.
+seat gets: its full persona file, the brief, the framing instruction, and the
+verdict contract from `verdict-contract.md`.
 
 Announce round transitions in roundtable mode so long runs stay legible.
 
 ### 5. Chairman synthesis
 
-Spawn a final sub-agent as chairman with every verdict and no other context. Its
-output is specified in `panel-topologies.md`: decision, consensus/dissent table,
-agreements, factual vs value disputes, blind spots, action plan, confidence
-warning.
+Spawn a final sub-agent as chairman with every verdict and no other context.
+
+If `panel.citeCalibration` is on and there are decisions with outcomes, run
+`npx persona-council calibration` and pass the results **to the chairman only**.
+It may weight by track record, and must say out loud when it does. The seats
+never see it - see `memory.md`.
 
 Two rules the chairman must not break:
 
 - **Unanimity gets flagged, never celebrated.** If every seat agreed, the report
-  says so explicitly and asks whether that reflects the proposal or the roster.
-- **Minority positions survive with attribution.** A single correct objection is
-  the whole reason to run a panel; it does not get averaged away.
+  says so and asks whether that reflects the proposal or the roster.
+- **Minority positions survive with attribution.** One correct objection is the
+  whole reason to run a panel; it is never averaged away.
 
 ### 6. Persist
 
-Write both a machine record and a readable one to the configured memory path
-(default `.claude/memory/`). Get a timestamp with `date -u +%Y%m%dT%H%M%SZ` -
-do not invent one.
+Decide the store first - this is the decision people get wrong. Read `memory.md`.
 
-- `.claude/memory/panel-<timestamp>-<slug>.json`
-- `.claude/memory/panel-<timestamp>-<slug>.md` - the transcript people read
-- `.claude/memory/latest-panel.json` - a copy of the most recent run
+**Default to scratch.** Use `decision` only when the user is actually deciding:
+"we're choosing", "this is the call", "write it up", or the choice is expensive
+to reverse. When unsure, choose scratch and say it can be promoted.
 
-```json
-{
-  "id": "panel-20260819T101500Z-usage-pricing",
-  "timestamp": "2026-08-19T10:15:00Z",
-  "question": "<verbatim>",
-  "mode": "fanout",
-  "rounds": 1,
-  "personas": [{ "id": "customer-advocate", "source": "local", "version": 1 }],
-  "verdicts": [
-    { "persona": "customer-advocate", "verdict": "oppose", "confidence": "high",
-      "concerns": [{ "blocking": true, "text": "..." }],
-      "changeMyMind": "...", "summary": "..." }
-  ],
-  "synthesis": { "decision": "...", "consensus": [], "dissent": [],
-                 "factualDisputes": [], "valueDisputes": [], "blindSpots": [],
-                 "actionPlan": [], "unanimityFlag": false },
-  "cost": { "subAgents": 4 }
-}
+Get a timestamp with `date -u +%Y-%m-%dT%H:%M:%SZ`; never invent one.
+
+- **scratch** → `<memory.scratchPath>/run-<timestamp>-<slug>.json`
+- **decision** → `<memory.decisionsPath>/<id>/decision.json`, id from the date
+  and a short slug
+
+Write the JSON in the shape given in `memory.md`, including `revisitWhen` - the
+field everyone skips and then regrets. Then render the memo rather than
+hand-writing it:
+
+```bash
+npx persona-council memo <id>                          # markdown
+npx persona-council memo <id> --html --out memo.html   # rich page
 ```
 
-Trim the memory directory to `memory.retain` entries (default 50), oldest first.
-Never delete `latest-panel.json`.
+Prune scratch afterwards: `npx persona-council prune`.
 
 ### 7. Present
 
 Lead with the decision and the dissent table - that is what the user came for.
-Then blind spots and the action plan. Then the path to the transcript. Keep
-individual verdicts collapsed or brief; the full text is in the transcript file.
+Then blind spots and the action plan. Keep individual verdicts brief; the full
+text is in the memo.
 
-Close with one line on what the panel could not see, given the roster and the
-isolation.
+Say what went into the brief, so the user can tell "the panel disagreed with me"
+from "the panel had half the picture".
+
+Close with one line on what the panel could not see, given this roster.
+
+**Offer the rich page** when `output.artifact` is `ask` and the run was of record:
+
+> Want this as a shareable page? `persona-council memo <id> --html` renders it,
+> and I can publish it as an artifact.
+
+If `output.artifact` is `always`, produce it without asking. If `never`, do not
+offer. A memo that circulates is worth more than one in a chat scroll - but a
+scratch riff does not need a landing page.
 
 ## Referring back
 
-If the user asks about a previous panel, read `.claude/memory/`. Do **not** feed
-prior verdicts into a new panel's payload by default - personas that see their
-own past positions defend them instead of re-judging. Only include prior results
-if the user explicitly asks for continuity, and say clearly in the payload that
-they are prior positions open to revision.
+If the user asks about a previous panel, read the decisions store. Cite prior
+decisions **to the user**, never into the seats' brief: personas shown their own
+past positions defend them instead of re-judging.
 
 ## Failure handling
 
-- A seat returns nothing or errors: report which seat, synthesize the rest, and
-  state plainly that the roster was incomplete. Never silently drop a seat.
-- Every seat returns `insufficient-information`: that is the finding. Report it,
-  and list the union of what they said was missing.
-- The user aborts mid-panel: persist whatever completed, marked partial.
+- A seat errors or returns nothing: name it, synthesize the rest, and state the
+  roster was incomplete. Never silently drop a seat.
+- Every seat returns `insufficient-information`: that is the finding, and usually
+  it means the brief was thin. Report the union of what they said was missing and
+  offer to re-run once it exists.
+- The user aborts mid-panel: persist what completed, marked partial, in scratch.

@@ -1,0 +1,43 @@
+{
+  "case": "pricing-change",
+  "domain": "pricing",
+  "description": "A pricing migration with sound arithmetic and no plan for the humans affected.",
+  "flaws": [
+    {
+      "id": "no-grandfathering",
+      "severity": "major",
+      "description": "Every existing account is switched at once with no grandfathering, opt-in period, or migration on renewal.",
+      "keywords": ["grandfather", "existing customer", "opt-in", "renewal", "migrate", "phase", "gradual"]
+    },
+    {
+      "id": "sample-not-representative",
+      "severity": "major",
+      "description": "The revenue model extrapolates from 30 accounts in a single month, with no check that the sample or the month is representative.",
+      "keywords": ["sample", "30 accounts", "representative", "extrapolat", "one month", "seasonal", "sampling"]
+    },
+    {
+      "id": "losers-uncounted",
+      "severity": "major",
+      "description": "The model reports aggregate revenue but never counts how many individual accounts would pay more, or how much more.",
+      "keywords": ["pay more", "losers", "worse off", "distribution", "which accounts", "increase for"]
+    },
+    {
+      "id": "legal-minimum-notice",
+      "severity": "moderate",
+      "description": "Relies on the 14-day contractual minimum for a change of billing model, which is legally sufficient and commercially hostile.",
+      "keywords": ["14 days", "notice", "too short", "contract", "minimum", "hostile"]
+    },
+    {
+      "id": "no-rollback",
+      "severity": "moderate",
+      "description": "No stated way to reverse the change if churn spikes after week 4.",
+      "keywords": ["rollback", "reverse", "undo", "revert", "back out", "kill switch"]
+    },
+    {
+      "id": "support-load",
+      "severity": "moderate",
+      "description": "Unpredictable invoices generate recurring support contacts; nobody has costed the support impact.",
+      "keywords": ["support", "tickets", "customer success", "billing questions", "invoice"]
+    }
+  ]
+}

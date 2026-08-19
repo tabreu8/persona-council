@@ -1,7 +1,7 @@
 {
   "name": "persona-council",
-  "description": "Persona thinking, isolated persona querying, and multi-persona debate panels for Claude Code.",
-  "version": "0.1.0",
+  "description": "Persona thinking, isolated querying, debate panels, and a calibrated decision journal for Claude Code.",
+  "version": "0.2.0",
   "author": {
     "name": "tabreu8",
     "url": "https://github.com/tabreu8"
@@ -9,5 +9,12 @@
   "homepage": "https://github.com/tabreu8/persona-council",
   "repository": "https://github.com/tabreu8/persona-council",
   "license": "MIT",
-  "keywords": ["persona", "debate", "red-team", "review", "council", "subagents"]
+  "keywords": [
+    "persona",
+    "debate",
+    "red-team",
+    "review",
+    "council",
+    "subagents"
+  ]
 }

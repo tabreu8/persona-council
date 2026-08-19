@@ -12,6 +12,22 @@ a different thing and pays for it differently.
 Announce the mode, the seats, and the sub-agent count **before** dispatching.
 A panel is expensive; the user should get to say "just two of them" first.
 
+## The cost ladder
+
+Recommend the cheapest rung that actually answers the question, and say why you
+did not go cheaper or dearer.
+
+| Rung | Spend | What you get |
+|---|---|---|
+| `persona-think` | free | One viewpoint, contaminated by the conversation |
+| `persona-ask` | 1 agent | One clean, uncontaminated verdict |
+| panel `fanout` | N + 1 | Independent verdicts, synthesized |
+| panel `chain` | N + 1 | A hardened artifact, anchored to seat one |
+| panel `roundtable` | N x rounds + 1 | An argued-out decision with positions that moved |
+
+Climbing a rung should be a decision, not a default. Most questions are answered
+at `ask`.
+
 ---
 
 ## fanout
@@ -88,3 +104,17 @@ conversation. It outputs:
 
 The chairman may not add opinions of its own beyond identifying blind spots, and
 may not resolve a value dispute on the user's behalf.
+
+## Weighting by track record
+
+When `panel.citeCalibration` is on and decisions carry outcomes, run
+`npx persona-council calibration` and give the results **to the chairman only**.
+
+It may use them to weight - "sales-lead has opposed all four pricing decisions
+and none of its concerns materialized, so this objection is discounted" - and it
+must say so out loud when it does. Silent weighting is just the chairman having
+opinions.
+
+The seats never see track records. A seat told it was wrong last time gets
+defensive; told it was right, overconfident. Either way you have traded the
+independence you paid for. See `memory.md`.

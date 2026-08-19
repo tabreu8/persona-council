@@ -22,8 +22,14 @@ it, and a human can edit it without tooling.
 | `directives` | no | Rules about how they answer. |
 | `refuses` | no | What is out of scope, so they say so instead of bluffing. |
 | `voice` | no | Register and rhythm. |
+| `evidence` | no | What the persona was built from. See `grounding.md`. |
+| `grounded_at` | no | When that evidence was gathered, so staleness is visible. |
 
 The body is the system prompt, written in the second person.
+
+A persona carrying `evidence` was built from real material - tickets, reviews,
+a competitor's public output - and is worth more trust than an invented one.
+Six months later nobody remembers which was which, so record it at the time.
 
 `stake` and `mandate` are marked "strongly" rather than "required" because the
 file is still valid without them - but a persona missing both will agree with

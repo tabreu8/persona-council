@@ -1,0 +1,37 @@
+{
+  "case": "data-retention",
+  "domain": "engineering",
+  "description": "A sensible consolidation that quietly creates a privacy and compliance problem.",
+  "flaws": [
+    {
+      "id": "indefinite-retention",
+      "severity": "major",
+      "description": "Retaining full event payloads indefinitely conflicts with data-minimization and storage-limitation duties under GDPR-style regimes, regardless of storage cost.",
+      "keywords": ["retention", "indefinit", "GDPR", "minimi", "storage limitation", "delete", "privacy", "regulat"]
+    },
+    {
+      "id": "no-deletion-path",
+      "severity": "major",
+      "description": "No mechanism for honouring deletion or erasure requests once data is fanned into a warehouse and exported nightly to a third-party tool.",
+      "keywords": ["deletion", "erasure", "right to be forgotten", "DSAR", "purge", "propagat", "downstream"]
+    },
+    {
+      "id": "third-party-export",
+      "severity": "major",
+      "description": "A nightly export of full customer data to a marketing tool is a new processor and a new exfiltration surface, with no DPA, scoping or field-level restriction mentioned.",
+      "keywords": ["export", "third party", "processor", "DPA", "vendor", "scope", "PII", "field"]
+    },
+    {
+      "id": "broad-read-access",
+      "severity": "moderate",
+      "description": "Three whole teams get direct read access to full payloads, with no role-based restriction or audit logging.",
+      "keywords": ["access", "least privilege", "role", "audit", "log", "restrict", "permission"]
+    },
+    {
+      "id": "no-rollback",
+      "severity": "moderate",
+      "description": "Decommissioning all three source stores after a two-week dual-write leaves no way back if the unified store proves wrong.",
+      "keywords": ["rollback", "decommission", "two weeks", "revert", "back out", "irreversible"]
+    }
+  ]
+}

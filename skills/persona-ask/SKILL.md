@@ -30,9 +30,14 @@ payload rules below as hard requirements, not style guidance.
 Per `.claude/persona-council/resolving-personas.md`. On a miss, list what exists
 and offer `persona-create`. Do not improvise a persona to fill the gap.
 
-### 2. Build the payload
+### 2. Build the brief
 
-The payload contains, and contains only:
+Follow `.claude/persona-council/briefing.md`. A seat can only judge what it was
+handed, and an `insufficient-information` verdict usually means the brief was
+thin rather than the question unanswerable. If a critical fact is missing and
+cheap to get, get it or ask for it before spending the sub-agent.
+
+The payload itself contains, and contains only:
 
 - **The question, verbatim.** The user's words. Not your paraphrase, which is
   where framing creeps in.
@@ -111,8 +116,23 @@ works the same way ("ask Priya about this, and show her the draft email"). Resol
 globs yourself; hand over concrete paths. If a path does not exist, say so
 before dispatching rather than letting the sub-agent flounder.
 
+## Framing
+
+A single seat can be asked for more than a review. From
+`.claude/persona-council/framings.md`: a pre-mortem ("it's six months on and this
+failed - what happened?") or a steelman ("make the strongest case against this")
+from one well-chosen persona is often worth more than a five-seat review. Pick
+the framing from the user's intent and name it in your reply.
+
 ## Cost note
 
-One sub-agent per call. If the user asks for several personas, do not loop this
-skill - use `persona-panel --mode fanout`, which dispatches concurrently and
-synthesizes properly.
+One sub-agent per call - the second rung of the ladder in `panel-topologies.md`,
+and the right answer to most questions. If the user asks for several personas, do
+not loop this skill: use `persona-panel --mode fanout`, which dispatches
+concurrently and synthesizes properly.
+
+## Memory
+
+A single ask is a scratch run by default and usually needs no record at all.
+Write one only if the user is deciding something on the strength of it, in which
+case follow `memory.md` and record it as a decision so it can carry an outcome.

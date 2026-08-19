@@ -93,7 +93,12 @@ export function install(root, { force = false, target = 'claude' } = {}) {
     results.push({ path: path.join('.claude', 'persona-council.config.json'), status: 'unchanged' });
   }
 
-  for (const dir of [personaDir(root, effective), path.resolve(root, effective.memory.path)]) {
+  const runtimeDirs = [
+    personaDir(root, effective),
+    path.resolve(root, effective.memory.scratchPath),
+    path.resolve(root, effective.memory.decisionsPath),
+  ];
+  for (const dir of runtimeDirs) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
       results.push({ path: path.relative(root, dir), status: 'created' });
@@ -129,7 +134,8 @@ export function readPackageVersion() {
 
 function ensureGitignore(root, config) {
   const file = path.join(root, '.gitignore');
-  const entries = [config.cacheDir, config.memory.path].map((p) => p.replace(/^\.\//, ''));
+  // Scratch runs are disposable and noisy; decisions are the record, so they stay.
+  const entries = [config.cacheDir, config.memory.scratchPath].map((p) => p.replace(/^\.\//, ''));
   const existing = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
   const missing = entries.filter((entry) => !existing.split(/\r?\n/).some((line) => line.trim() === entry));
   if (missing.length === 0) return null;

@@ -29,7 +29,34 @@ authored there using that server's tools, following the source's `resolve`
 instruction in reverse. Confirm the destination with the user before writing to
 anything remote - writing into someone's Notion is not undoable from here.
 
-### 2. Interview, but briefly
+### 2. Offer to ground it in evidence
+
+**Do this before interviewing.** An invented persona surfaces considerations; a
+persona built from real material surfaces *your* considerations, in the words
+your customers, reviewers or competitors actually use. The quality gap is larger
+than any amount of prompt tuning.
+
+Two routes, both in `.claude/persona-council/grounding.md`:
+
+- **Material the user has** - "build it from support-tickets-q2.csv", "from
+  Maria's last 50 PR comments", "read docs/competitors/". Read it, pull real
+  recurring objections and real vocabulary, keep quotes for the ones you use.
+- **Research you run yourself** - when they have no file to hand you, offer:
+
+  > I can build this from what's public - their pricing page, changelog, recent
+  > talks, and the one-star reviews. A few minutes. Want me to?
+
+  Propose the specific sources and get a yes before fetching anything. Then use
+  whatever you have: web search, the repo, MCP servers, issue trackers.
+
+Record what it was built from in `evidence` and `grounded_at`. Never invent a
+quote: paraphrase freely, fabricate nothing. A made-up quote is believed
+precisely because it looks specific.
+
+If the user declines both, say plainly that the persona will be an archetype
+rather than a portrait, and carry on.
+
+### 3. Interview, but briefly
 
 You need enough to write something specific. Ask for what you cannot infer, in
 one round, not one question at a time:
@@ -44,7 +71,7 @@ If the user's request already answers most of these ("a skeptical seed-stage VC
 who has been burned by pre-revenue AI companies"), draft first and ask them to
 correct it. A concrete draft to react to beats an interview.
 
-### 3. Write the file
+### 4. Write the file
 
 Follow `.claude/persona-council/persona-schema.md` exactly. Non-negotiables:
 
@@ -66,7 +93,7 @@ house voice, which is exactly what the user already has.
 
 Filename is `<id>.md` where `id` is the slug in the frontmatter.
 
-### 4. Validate before writing
+### 5. Validate before writing
 
 Check: `id` is a slug and matches the filename; `name` and `role` are present;
 the body is substantive; `stake` and `mandate` are non-empty and specific.
@@ -74,7 +101,7 @@ the body is substantive; `stake` and `mandate` are non-empty and specific.
 If a file with that id already exists, show the diff you propose and ask before
 overwriting. Personas accumulate tuning; silently replacing one loses it.
 
-### 5. Show and smoke-test
+### 6. Show and smoke-test
 
 Print a compact summary - id, name, role, stake, mandate, top two blind spots -
 and the path written. Then offer the smoke test:

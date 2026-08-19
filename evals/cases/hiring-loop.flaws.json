@@ -1,0 +1,37 @@
+{
+  "case": "hiring-loop",
+  "domain": "hiring",
+  "description": "A hiring loop optimized for speed at the cost of fairness and signal.",
+  "flaws": [
+    {
+      "id": "takehome-excludes",
+      "severity": "major",
+      "description": "A 4-6 hour unpaid take-home systematically filters out candidates with caregiving duties or second jobs, narrowing the pool in a way that correlates with protected characteristics.",
+      "keywords": ["take-home", "unpaid", "caregiv", "exclude", "bias", "accessib", "parents", "diversity", "hours"]
+    },
+    {
+      "id": "majority-vote-fit",
+      "severity": "major",
+      "description": "'Team fit' decided by majority vote is a well-documented vector for affinity bias, and creates no written record of why someone was rejected.",
+      "keywords": ["fit", "majority vote", "affinity bias", "culture fit", "subjective", "record", "rubric"]
+    },
+    {
+      "id": "no-design-signal",
+      "severity": "moderate",
+      "description": "Removing the system-design round for senior hires drops the signal most predictive of seniority, and nothing replaces it.",
+      "keywords": ["system design", "seniority", "signal", "architecture", "replace", "senior"]
+    },
+    {
+      "id": "diagnosis-unverified",
+      "severity": "moderate",
+      "description": "Two of five losses is assumed to be a speed problem; nobody asked the candidates why they declined.",
+      "keywords": ["why", "asked", "declin", "root cause", "compensation", "assum", "sample of"]
+    },
+    {
+      "id": "no-pilot",
+      "severity": "moderate",
+      "description": "Applies to all senior roles immediately with no pilot, no calibration for interviewers, and no measure of whether hire quality changed.",
+      "keywords": ["pilot", "immediately", "calibrat", "trial", "measure", "quality of hire", "gradual"]
+    }
+  ]
+}

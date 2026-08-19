@@ -80,14 +80,16 @@ test('init preserves an existing config instead of resetting it', () => {
   assert.equal(JSON.parse(fs.readFileSync(configFile, 'utf8')).panel.maxPersonas, 2);
 });
 
-test('init adds gitignore entries for cache and memory exactly once', () => {
+test('init gitignores scratch and cache exactly once, but not the decision record', () => {
   const root = sandbox();
   fs.writeFileSync(path.join(root, '.gitignore'), 'node_modules\n');
   install(root);
   install(root);
-  const lines = fs.readFileSync(path.join(root, '.gitignore'), 'utf8').split('\n');
-  assert.equal(lines.filter((l) => l.trim() === '.claude/memory').length, 1);
-  assert.equal(lines.filter((l) => l.trim() === 'node_modules').length, 1);
+  const lines = fs.readFileSync(path.join(root, '.gitignore'), 'utf8').split('\n').map((l) => l.trim());
+  assert.equal(lines.filter((l) => l === '.claude/memory/scratch').length, 1);
+  assert.equal(lines.filter((l) => l === '.claude/.persona-cache').length, 1);
+  assert.equal(lines.filter((l) => l === 'node_modules').length, 1);
+  assert.equal(lines.filter((l) => l.includes('decisions')).length, 0, 'the record is meant to be committed');
 });
 
 test('the generic target writes one portable manual instead of Claude assets', () => {

@@ -2,7 +2,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const CONFIG_FILENAME = 'persona-council.config.json';
-export const CONFIG_VERSION = 1;
+export const CONFIG_VERSION = 2;
+
+/**
+ * Runs land in one of two stores, and the distinction is not cosmetic.
+ *
+ * `scratch` is for thinking out loud: cheap, auto-pruned, and deliberately
+ * excluded from persona track records. A brainstorm is never "decided", so it
+ * never earns an outcome -- journaling it would leave an open decision that can
+ * never close, and calibration computed over idle riffs is noise.
+ *
+ * `decision` is of-record: kept forever, eligible for a retro, and the only
+ * thing that feeds calibration. Scratch is the default because promoting a run
+ * is cheap and un-polluting a journal is not.
+ */
+export const MEMORY_MODES = ['scratch', 'decision'];
 
 export function defaultConfig() {
   return {
@@ -21,9 +35,12 @@ export function defaultConfig() {
     writeTo: 'local',
     cacheDir: '.claude/.persona-cache',
     memory: {
-      path: '.claude/memory',
+      defaultMode: 'scratch',
+      scratchPath: '.claude/memory/scratch',
+      decisionsPath: '.claude/memory/decisions',
+      scratchRetain: 20,
+      scratchMaxAgeDays: 14,
       writeTranscript: true,
-      retain: 50,
     },
     panel: {
       defaultMode: 'fanout',
@@ -32,6 +49,13 @@ export function defaultConfig() {
       maxRounds: 3,
       requireDissenter: true,
       anonymizeRoundTable: true,
+      citeCalibration: true,
+    },
+    // Named rosters turn a habit into a rule: "run it past launch-review".
+    rosters: {},
+    output: {
+      memo: true,
+      artifact: 'ask', // never | ask | always
     },
     defaults: {
       model: 'inherit',
@@ -40,6 +64,7 @@ export function defaultConfig() {
 }
 
 export const SOURCE_TYPES = ['local', 'git', 'mcp'];
+export const ARTIFACT_MODES = ['never', 'ask', 'always'];
 
 /**
  * `mcp` sources are resolved by the agent at runtime, not by this CLI -- the
@@ -77,7 +102,25 @@ export function loadConfig(root) {
   } catch (error) {
     throw new Error(`${file} is not valid JSON: ${error.message}`);
   }
-  return { config: mergeConfig(defaultConfig(), parsed), path: file, exists: true };
+  return { config: mergeConfig(defaultConfig(), migrateConfig(parsed)), path: file, exists: true };
+}
+
+/** v1 kept every run in one flat directory with no scratch/decision split. */
+export function migrateConfig(config) {
+  if (!config || config.version >= CONFIG_VERSION) return config;
+  const next = { ...config, version: CONFIG_VERSION };
+  const legacy = config.memory || {};
+  next.memory = {
+    defaultMode: 'scratch',
+    scratchPath: legacy.path ? path.join(legacy.path, 'scratch') : '.claude/memory/scratch',
+    decisionsPath: legacy.path ? path.join(legacy.path, 'decisions') : '.claude/memory/decisions',
+    scratchRetain: legacy.retain ?? 20,
+    scratchMaxAgeDays: 14,
+    writeTranscript: legacy.writeTranscript ?? true,
+  };
+  next.rosters = config.rosters || {};
+  next.output = config.output || { memo: true, artifact: 'ask' };
+  return next;
 }
 
 export function mergeConfig(base, override) {
@@ -85,6 +128,8 @@ export function mergeConfig(base, override) {
   merged.memory = { ...base.memory, ...(override.memory || {}) };
   merged.panel = { ...base.panel, ...(override.panel || {}) };
   merged.defaults = { ...base.defaults, ...(override.defaults || {}) };
+  merged.output = { ...base.output, ...(override.output || {}) };
+  merged.rosters = { ...base.rosters, ...(override.rosters || {}) };
   if (!Array.isArray(merged.sources) || merged.sources.length === 0) {
     merged.sources = base.sources;
   }
@@ -124,6 +169,23 @@ export function validateConfig(config) {
   const writeTarget = config.sources.find((s) => s.id === config.writeTo);
   if (writeTarget && !writeTarget.writable) {
     errors.push(`writeTo source "${config.writeTo}" is marked writable: false`);
+  }
+  if (!MEMORY_MODES.includes(config.memory?.defaultMode)) {
+    errors.push(`memory.defaultMode must be one of ${MEMORY_MODES.join(', ')}`);
+  }
+  if (config.memory?.scratchPath === config.memory?.decisionsPath) {
+    errors.push('memory.scratchPath and memory.decisionsPath must differ, or brainstorms pollute the journal');
+  }
+  if (!ARTIFACT_MODES.includes(config.output?.artifact)) {
+    errors.push(`output.artifact must be one of ${ARTIFACT_MODES.join(', ')}`);
+  }
+  for (const [name, roster] of Object.entries(config.rosters || {})) {
+    if (!Array.isArray(roster.personas) || roster.personas.length === 0) {
+      errors.push(`roster "${name}" needs a non-empty personas array`);
+    }
+    if (roster.mode && !['fanout', 'chain', 'roundtable'].includes(roster.mode)) {
+      errors.push(`roster "${name}" has unknown mode "${roster.mode}"`);
+    }
   }
   return errors;
 }
