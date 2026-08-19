@@ -16,10 +16,9 @@
 You ask your agent a question you already have an opinion about. Normally it
 agrees with you. Instead:
 
-```
-/persona-panel --personas="sre-oncall,product-lead,vc-skeptic" --mode=roundtable
-               --prompt="Ship the payments migration Friday afternoon?"
-```
+> **you:** get the SRE, the PM and the VC in a room on whether we ship the
+> payments migration Friday afternoon — and make them actually argue, don't
+> just poll them
 
 Three personas answer independently. None of them sees your conversation. None
 of them sees the others. Then they get each other's arguments back — stripped of
@@ -56,6 +55,12 @@ None. Two seats disagreed on substance and one refused to guess.
 ```
 
 *(Illustrative — your personas, your question, your disagreements.)*
+
+Nothing above is special syntax. Ask in your own words and the skill picks the
+roster, justifies each seat, and tells you what it's about to spend before it
+spawns anything. Flags exist for when you want to pin it down —
+`/persona-panel --personas="sre-oncall,product-lead,vc-skeptic" --mode=roundtable
+--prompt="..."` — and mean exactly the same thing.
 
 The last section is the one that matters. If all three had endorsed it, that box
 would say so and ask whether you learned something about the plan or just

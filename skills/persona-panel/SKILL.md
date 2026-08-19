@@ -21,12 +21,20 @@ short and both change what you do.
 
 ### 1. Parse the request
 
-Accept flags or plain language, equivalently:
+Plain language is the normal case; flags are the precise one. Both are valid and
+mean the same thing:
 
 ```
-/persona-panel --personas="vc-skeptic,sre-oncall,product-lead" --mode=fanout --prompt="Should we ship this?"
 "get the VC, the SRE and the PM to weigh in on whether we should ship this"
+"have them actually argue it out"                -> roundtable
+"red-team this proposal"                         -> chain
+/persona-panel --personas="vc-skeptic,sre-oncall,product-lead" --mode=fanout --prompt="Should we ship this?"
 ```
+
+Never ask the user to restate a request as flags. Infer the mode from what they
+asked for - independent reads mean `fanout`, "argue"/"discuss"/"debate" means
+`roundtable`, "red team"/"poke holes"/"harden this" means `chain` - and name the
+mode you picked in the confirmation line so they can correct it.
 
 Defaults from `.claude/persona-council.config.json`: `panel.defaultMode`
 (`fanout`), `panel.maxPersonas` (7), `panel.maxRounds` (3),
