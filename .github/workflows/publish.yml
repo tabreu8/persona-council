@@ -21,6 +21,11 @@ name: publish
 on:
   push:
     branches: [main]
+  workflow_dispatch: {}   # lets this be run on demand to verify the pipeline
+                          # without needing a real version bump -- the version
+                          # check still gates the actual publish, so a manual
+                          # run against an unchanged version is a safe no-op
+                          # dry run rather than a real release.
 
 jobs:
   publish:
