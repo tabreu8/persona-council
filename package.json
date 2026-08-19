@@ -23,7 +23,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "node --test"
   },
   "keywords": [
     "claude",
@@ -39,5 +40,14 @@
   "license": "MIT",
   "engines": {
     "node": ">=18.17"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tabreu8/persona-council.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tabreu8/persona-council/issues"
+  },
+  "homepage": "https://github.com/tabreu8/persona-council#readme",
+  "author": "tabreu8"
 }

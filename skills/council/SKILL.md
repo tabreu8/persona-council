@@ -1,6 +1,6 @@
 ---
 name: council
-description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, retro) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, or invokes /council without saying which mode they want.
+description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, retro) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, for a brainstorm from several viewpoints, for how an audience or customer would react to something, or invokes /council without saying which mode they want.
 ---
 
 # council

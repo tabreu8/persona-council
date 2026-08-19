@@ -1,6 +1,6 @@
 ---
 name: persona-panel
-description: Convene several personas on one question using a fanout, chained red-team, or multi-round roundtable topology, then synthesize a chairman verdict with a consensus-versus-dissent table and blind spots. Use when the user wants a panel, council, debate, focus group, pre-mortem, red team, multiple perspectives, or a decision weighed from several angles, and when a single persona is not enough.
+description: Convene several personas on one question - to judge it (fanout, chained red-team, or roundtable debate with a chairman synthesis), to brainstorm it (each seat contributes ideas only its lens produces), or to react to it (market research - how would customers, buyers, or segments respond). Use when the user wants a panel, council, debate, focus group, pre-mortem, red team, multiple perspectives, group brainstorm, idea generation from several viewpoints, or to test how something lands with different audiences.
 ---
 
 # persona-panel

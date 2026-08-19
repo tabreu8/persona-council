@@ -1,0 +1,31 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: 18            # the oldest version engines claims to support
+          - os: ubuntu-latest
+            node: 22
+          - os: windows-latest  # path handling is the likely break on Windows
+            node: 22
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test
+      # The tarball a user actually gets: pack it, install it cold, run init.
+      - run: npm pack
+      - run: npm install --prefix smoke ./persona-council-*.tgz
+        shell: bash
+      - run: ./smoke/node_modules/.bin/persona-council init --dir smoke && ./smoke/node_modules/.bin/persona-council doctor --dir smoke
+        shell: bash

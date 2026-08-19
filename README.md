@@ -431,7 +431,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 61 tests, `node --test`, no framework — including a
+Zero runtime dependencies. 65 tests, `node --test`, no framework — including a
 guard that every field the docs tell an agent to record actually reaches the
 memo, because "recorded and silently dropped" has been the most common bug here.
 
