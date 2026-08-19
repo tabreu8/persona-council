@@ -19,7 +19,7 @@ A sub-agent starts empty. It sees exactly the prompt you write and nothing else 
 no message history, no prior reasoning, no user preferences expressed earlier.
 
 So the *only* way bias reaches it is through you. If you write "evaluate this
-solid migration plan the user is excited about", you have handed over the
+strong campaign the user is excited about", you have handed over the
 conclusion. The isolation is real; the neutrality is your discipline. Treat the
 payload rules below as hard requirements, not style guidance.
 
@@ -91,7 +91,7 @@ rebuttal inside the card. If you disagree with the persona, say so *after* the
 card, clearly marked as your own view.
 
 ```markdown
-> **Marta Okafor** - Staff SRE
+> **Priya Raman** - Head of Customer Success
 > ---
 > **Verdict:** oppose (confidence: high)
 > **Top concerns**
@@ -107,7 +107,7 @@ weigh the verdict knowing it.
 ## Attachments
 
 `--file path/to/doc.md` and repeats of it are supported, but plain language
-works the same way ("ask the SRE about this, and show her the runbook"). Resolve
+works the same way ("ask Priya about this, and show her the draft email"). Resolve
 globs yourself; hand over concrete paths. If a path does not exist, say so
 before dispatching rather than letting the sub-agent flounder.
 

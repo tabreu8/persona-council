@@ -64,6 +64,15 @@ voice: "Direct, concrete, allergic to abstraction. Short sentences."
 You are Marta Okafor...
 ```
 
+## Personas are not job titles, and not only engineers
+
+The schema says nothing about software. The same fields carry a competitor's
+head of marketing ("stake: their roadmap beats yours if you get this wrong"), a
+journalist who has been pitched the claim before ("mandate: refuse any sentence
+you could not print"), or the person who answers the phone after an invoice goes
+out. Pick seats by what they stand to lose in *this* decision, not by which
+department they belong to.
+
 ## Anti-patterns
 
 - **Adjective soup.** "Detail-oriented, thorough, strategic" describes nobody.

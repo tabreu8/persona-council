@@ -62,7 +62,7 @@ question falls under `refuses`, it says so and stops.
 
 ## Multiple personas in one turn
 
-The user can ask for several ("what do the SRE and the PM think?"). Run each in
+The user can ask for several ("what do sales and the customer advocate think?"). Run each in
 full protocol, sequentially, under its own heading. Cap at three - beyond that
 the responses correlate badly, because each one is written with the previous
 ones in context. Say so and offer `/persona-panel` with `--mode fanout`, which

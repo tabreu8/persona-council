@@ -16,9 +16,9 @@
 You ask your agent a question you already have an opinion about. Normally it
 agrees with you. Instead:
 
-> **you:** get the SRE, the PM and the VC in a room on whether we ship the
-> payments migration Friday afternoon — and make them actually argue, don't
-> just poll them
+> **you:** get sales, finance and the customer advocate in a room on whether we
+> move to usage-based pricing next quarter — and make them actually argue,
+> don't just poll them
 
 Three personas answer independently. None of them sees your conversation. None
 of them sees the others. Then they get each other's arguments back — stripped of
@@ -27,31 +27,34 @@ and a chairman writes this up:
 
 ```markdown
 ## Decision
-Do not ship Friday. Ship Tuesday morning. Confidence: high — the one seat that
-endorsed Friday withdrew it after seeing the rollback argument.
+Don't switch next quarter. Ship it as an opt-in tier and migrate accounts on
+renewal. Confidence: medium — the whole thing hinges on a number nobody has run.
 
 ## Panel
-| Seat         | Verdict                 | Confidence | Position                                    |
-|--------------|-------------------------|------------|---------------------------------------------|
-| sre-oncall   | oppose                  | high       | No tested rollback; blast radius is all of  |
-|              |                         |            | checkout, and half the team is off Monday.  |
-| product-lead | endorse-with-conditions | medium     | Was Friday; moved to Tuesday in round 2.    |
-| vc-skeptic   | insufficient-information| —          | Can't judge without the revenue-at-risk     |
-|              |                         |            | number nobody has produced.                 |
+| Seat              | Verdict                  | Confidence | Position                                     |
+|-------------------|--------------------------|------------|----------------------------------------------|
+| sales-lead        | oppose                   | high       | Mid-market reps sell predictability. Usage   |
+|                   |                          |            | pricing turns every renewal into a fresh     |
+|                   |                          |            | negotiation with a worse opening position.   |
+| finance-lead      | endorse-with-conditions  | medium     | Expansion upside is real, but only if we can |
+|                   |                          |            | forecast it. Right now we can't.             |
+| customer-advocate | insufficient-information | —          | Nobody has asked the ~40 accounts whose bill |
+|                   |                          |            | would go up. That's the whole question.      |
 
 ## Where they disagree
-**Factual** — Is the rollback tested? → settled by: run the documented rollback
-against staging with production-shaped data. One command, forty minutes.
-**Values** — Two days of slip against a quarter-end commitment. Your call:
-nobody on this panel owns both sides of that tradeoff.
+**Factual** — how many accounts actually pay more under the new model? → settled
+by: replay last quarter's real usage against the proposed rate card. Half a day
+with the billing export, and it ends the argument.
+**Values** — revenue predictability against expansion upside. Your call: sales
+owns one of those numbers, finance owns the other, and neither can concede
+without giving up something real.
 
 ## Blind spots
-No seat raised customer support load. A Friday payments incident lands on a
-skeleton weekend rota — none of these three personas carries that pager, so
-none of them costed it.
+No seat raised support load. A bill people can't predict generates a ticket every
+month, and nobody in this room answers those tickets.
 
 ## Confidence warning
-None. Two seats disagreed on substance and one refused to guess.
+None — two seats disagreed on substance and the third refused to guess.
 ```
 
 *(Illustrative — your personas, your question, your disagreements.)*
@@ -59,12 +62,33 @@ None. Two seats disagreed on substance and one refused to guess.
 Nothing above is special syntax. Ask in your own words and the skill picks the
 roster, justifies each seat, and tells you what it's about to spend before it
 spawns anything. Flags exist for when you want to pin it down —
-`/persona-panel --personas="sre-oncall,product-lead,vc-skeptic" --mode=roundtable
+`/persona-panel --personas="sales-lead,finance-lead,customer-advocate" --mode=roundtable
 --prompt="..."` — and mean exactly the same thing.
 
 The last section is the one that matters. If all three had endorsed it, that box
 would say so and ask whether you learned something about the plan or just
 something about your roster.
+
+---
+
+## Different rooms
+
+Nothing in here knows what a deploy is. A council is a way of weighing a
+decision nobody can settle with a test — which makes it worth *more* outside
+engineering, not less. Code has a compiler to tell you that you were wrong.
+Positioning doesn't. Neither does a hiring call, or a roadmap cut.
+
+| Deciding | A room worth convening |
+|---|---|
+| **Product** | the customer who churned last month · the engineer who has to build it · the exec who has to fund it |
+| **Marketing** | a competitor's head of marketing · a journalist who has been pitched this exact claim before · the buyer who already doesn't believe you |
+| **Pricing / strategy** | sales · finance · the person who answers the phone after the invoice goes out |
+| **Hiring** | the person who would report to them · the peer who would have to cover their gaps |
+| **Writing** | a reader in a hurry · the person you quoted · someone who thinks the premise is wrong |
+| **Engineering** | the SRE who carries the pager · the staff engineer who maintains it in two years · security |
+
+The best seat in any room is usually the one that loses something if you turn
+out to be right.
 
 ---
 
@@ -130,23 +154,23 @@ person with no tooling at all.
 
 ```markdown
 ---
-id: sre-oncall
-name: Marta Okafor
-role: Staff SRE, eight years carrying the pager for a payments platform
-stake: "You are on call for this. Every shortcut here becomes your 3am page."
-mandate: "Refuse anything with no rollback path or unbounded blast radius — say so first."
+id: customer-advocate
+name: Priya Raman
+role: Head of Customer Success, five years fielding the calls after every pricing change
+stake: "Your team absorbs every angry renewal call this produces. You will personally be on some of them."
+mandate: "Refuse anything nobody has tested on a real customer — and name the accounts it hurts in your first sentence."
 lens:
-  - "What breaks, how loudly, and who finds out first"
-  - "How we undo it under pressure at 3am"
+  - "Which specific accounts get worse off, and by how much"
+  - "What this looks like to someone who wasn't in the meeting where we decided it"
 biases:
-  - "Believes almost every outage traces back to a change nobody could reverse quickly"
+  - "Believes almost all churn is a surprise the customer could have been warned about"
 blind_spots:
-  - "Undervalues speed-to-market; will trade six weeks for a marginal reliability gain"
+  - "Overweights the loudest twenty accounts; quietly satisfied customers are invisible to you"
 ---
 
 ## Perspective
 
-You are Marta Okafor...
+You are Priya Raman...
 ```
 
 The `blind_spots` field is not decoration. It is what lets the chairman *weight*
@@ -234,9 +258,9 @@ so the skills spend real effort constraining it: verbatim question, the artifact
 facts only. That's instructions doing the work, not a sandbox. The orchestrator
 is the leak, and it's told so in as many words.
 
-**Personas decorrelate opinions. They don't create knowledge.** Marta Okafor is
-not an SRE. She's a lens that makes the model surface reliability considerations
-it had deprioritized. A panel is a tool for finding what you failed to weigh —
+**Personas decorrelate opinions. They don't create knowledge.** Priya Raman is
+not a real head of customer success. She's a lens that makes the model surface
+the renewal-desk consequences it had quietly deprioritized. A panel is a tool for finding what you failed to weigh —
 not a source of facts nobody in the room has.
 
 **It costs real tokens.** A five-seat roundtable is fifteen-plus sub-agent runs.
@@ -251,7 +275,8 @@ Zero runtime dependencies. 27 tests, `node --test`, no framework.
 
 Personas are **data, not sub-agents** — a deliberate departure from the obvious
 design. Writing them into `.claude/agents/` would make Claude Code auto-delegate
-to them on unrelated work, so a "skeptical VC" starts reviewing your CSS. Instead
+to them on unrelated work, so a "brand skeptic" starts reviewing your database
+migrations. Instead
 they live in their own directory in a portable format, and the skills inject them
 into generic runners. Your agent namespace stays clean; your personas stay usable
 outside Claude Code.

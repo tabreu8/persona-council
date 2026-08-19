@@ -49,8 +49,10 @@ correct it. A concrete draft to react to beats an interview.
 Follow `.claude/persona-council/persona-schema.md` exactly. Non-negotiables:
 
 - **`stake`** - a concrete consequence this persona personally absorbs. Not
-  "cares about quality". "You signed off on the last release that took down
-  checkout for four hours."
+  "cares about quality", but "your team takes every angry renewal call this
+  produces", or "you approved the last campaign that got quoted back at us in a
+  bad review", or "you signed off on the release that took checkout down for
+  four hours". Whatever domain the persona sits in, it must be able to lose.
 - **`mandate`** - the written obligation to disagree, and the conditions for an
   outright no. Without this the persona will endorse whatever it is shown.
 - **`blind_spots`** - real ones, that cost the persona something. This is what
@@ -95,6 +97,16 @@ rewrite a persona wholesale when asked to adjust one field.
 
 - "Create a persona for X" - full procedure.
 - "Make the VC harsher" - targeted edit to `mandate` and `directives`.
-- "Build me a panel for reviewing infra changes" - create the seats one at a
-  time, each with a distinct lens, then suggest a roster. Deliberately give them
-  conflicting stakes; a roster that agrees by construction tells you nothing.
+- "Build me a panel for X" - whether X is infra changes, launch messaging,
+  roadmap cuts or a hiring loop, create the seats one at a time, each with a
+  distinct lens, then suggest a roster. Deliberately give them conflicting
+  stakes; a roster that agrees by construction tells you nothing.
+
+## This is not an engineering tool
+
+Personas are just as useful for messaging, pricing, roadmap, hiring and writing
+decisions as for technical ones - arguably more so, since there is no test suite
+to settle a positioning argument. Do not default to engineering archetypes.
+Build the room the *decision* needs: for a launch that might be a competitor's
+head of marketing, a journalist who has heard this claim before, and the buyer
+who already does not believe you.

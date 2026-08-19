@@ -25,10 +25,11 @@ Plain language is the normal case; flags are the precise one. Both are valid and
 mean the same thing:
 
 ```
-"get the VC, the SRE and the PM to weigh in on whether we should ship this"
-"have them actually argue it out"                -> roundtable
-"red-team this proposal"                         -> chain
-/persona-panel --personas="vc-skeptic,sre-oncall,product-lead" --mode=fanout --prompt="Should we ship this?"
+"what would sales, finance and the customer advocate say about usage pricing?"
+"get the whole room on this positioning statement"
+"have them actually argue it out"                 -> roundtable
+"red-team this launch plan"                       -> chain
+/persona-panel --personas="sales-lead,finance-lead,customer-advocate" --mode=fanout --prompt="..."
 ```
 
 Never ask the user to restate a request as flags. Infer the mode from what they
@@ -56,8 +57,8 @@ correlate and synthesis quality drops faster than coverage improves.
 
 Then state the plan and the cost before dispatching:
 
-> Panel: vc-skeptic, sre-oncall, product-lead. Mode: fanout. That's 3 parallel
-> sub-agents plus a chairman. Go?
+> Panel: sales-lead, finance-lead, customer-advocate. Mode: fanout. That's 3
+> parallel sub-agents plus a chairman. Go?
 
 Skip the confirmation only if the user has already specified everything
 explicitly - but still print the line so the spend is visible.
@@ -104,14 +105,14 @@ do not invent one.
 
 ```json
 {
-  "id": "panel-20260819T101500Z-ship-decision",
+  "id": "panel-20260819T101500Z-usage-pricing",
   "timestamp": "2026-08-19T10:15:00Z",
   "question": "<verbatim>",
   "mode": "fanout",
   "rounds": 1,
-  "personas": [{ "id": "sre-oncall", "source": "local", "version": 1 }],
+  "personas": [{ "id": "customer-advocate", "source": "local", "version": 1 }],
   "verdicts": [
-    { "persona": "sre-oncall", "verdict": "oppose", "confidence": "high",
+    { "persona": "customer-advocate", "verdict": "oppose", "confidence": "high",
       "concerns": [{ "blocking": true, "text": "..." }],
       "changeMyMind": "...", "summary": "..." }
   ],

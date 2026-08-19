@@ -1,7 +1,7 @@
 {
   "name": "persona-council",
   "version": "0.1.0",
-  "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your coding agent.",
+  "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your agent. For any decision, not just code.",
   "type": "module",
   "bin": {
     "persona-council": "bin/cli.js"

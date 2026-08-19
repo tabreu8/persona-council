@@ -23,8 +23,8 @@ Every seat gets the *same* clean payload, and that payload must be neutral:
 
 It must **not** contain: what you think the answer is, what the user is hoping
 to hear, what other personas said (in fanout), or any adjective describing the
-proposal's quality. "Evaluate this migration plan" - not "evaluate this solid
-migration plan".
+proposal's quality. "Evaluate this pricing change" - not "evaluate this
+well-reasoned pricing change".
 
 You are the biggest leak risk in the whole system. A sub-agent starts with an
 empty context; the only thing that can contaminate it is the prompt you write.
