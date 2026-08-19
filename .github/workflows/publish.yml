@@ -5,6 +5,19 @@ name: publish
 # an ungated "publish on push" would fail loudly on every doc fix and typo
 # commit. The gate makes "bump the version and push" the entire release
 # process: this workflow does the rest, including tagging.
+#
+# Auth is npm Trusted Publishing (OIDC) -- https://docs.npmjs.com/trusted-publishers
+# -- not a stored token. npm issues a short-lived credential scoped to this
+# exact repo, workflow file and run; there is no long-lived secret to create,
+# rotate, or leak. `id-token: write` below is what lets GitHub mint that OIDC
+# token in the first place. This also gets provenance attestation for free:
+# the npm CLI auto-attaches it when it detects an OIDC-authenticated publish,
+# and it shows up as a verified "Provenance" badge on the npm package page.
+#
+# One-time setup on npmjs.com, not in this file: package Settings ->
+# Trusted Publisher -> GitHub Actions -> organization/user "tabreu8",
+# repository "persona-council", workflow filename "publish.yml" (bare
+# filename, not the .github/workflows/ path), environment left blank.
 on:
   push:
     branches: [main]
@@ -14,14 +27,20 @@ jobs:
     if: github.repository == 'tabreu8/persona-council'
     runs-on: ubuntu-latest
     permissions:
+      id-token: write   # mints the OIDC token trusted publishing exchanges for a publish credential
       contents: write   # to push the release tag once published
     steps:
       - uses: actions/checkout@v4
 
+      # Trusted publishing needs npm CLI >= 11.5.1 and Node >= 22.14; the
+      # '22' floating tag always resolves to a current 22.x, which satisfies
+      # both today. npm --version is logged so a future regression is visible
+      # in the run output rather than failing opaquely at the publish step.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
+      - run: npm --version
 
       - run: node --test
 
@@ -41,12 +60,11 @@ jobs:
 
       # prepublishOnly (package.json) reruns the suite as a second gate right
       # before the registry write; the explicit run above just fails fast and
-      # keeps the reason visible in its own log step.
+      # keeps the reason visible in its own log step. No NODE_AUTH_TOKEN here
+      # -- npm detects the OIDC environment and authenticates through that.
       - name: Publish to npm
         if: steps.check.outputs.skip == 'false'
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag the release
         if: steps.check.outputs.skip == 'false'
