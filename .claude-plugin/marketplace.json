@@ -1,0 +1,21 @@
+{
+  "name": "persona-council",
+  "owner": {
+    "name": "tabreu8",
+    "url": "https://github.com/tabreu8"
+  },
+  "metadata": {
+    "description": "Persona thinking and debate capabilities for coding agents.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "persona-council",
+      "source": "./",
+      "description": "Create personas, think as them inline, query them in isolated sub-agents, and run fanout / chained / roundtable debate panels with a chairman synthesis.",
+      "version": "0.1.0",
+      "category": "workflow",
+      "keywords": ["persona", "debate", "red-team", "review", "council"]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+node_modules/
+.claude/memory/
+.claude/.persona-cache/
+*.tgz

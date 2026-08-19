@@ -1,0 +1,118 @@
+---
+name: persona-ask
+description: Query one saved persona in an isolated sub-agent that sees only a clean, neutral payload, so its verdict is not anchored to the current conversation. Use when the user wants an unbiased or independent read, a second opinion, a sanity check, or a review of a document or diff by a specific persona. Supports attaching files to the persona's clean context.
+---
+
+# persona-ask
+
+> **Shared references.** This skill cites files like `resolving-personas.md`.
+> They live at `.claude/persona-council/<file>` when installed with
+> `npx persona-council init`, or at `${CLAUDE_PLUGIN_ROOT}/reference/<file>`
+> when installed as a plugin. Try the first path, fall back to the second.
+
+Run one persona in a fresh sub-agent that has never seen this conversation, and
+bring back a structured verdict.
+
+## What isolation does and does not guarantee
+
+A sub-agent starts empty. It sees exactly the prompt you write and nothing else -
+no message history, no prior reasoning, no user preferences expressed earlier.
+
+So the *only* way bias reaches it is through you. If you write "evaluate this
+solid migration plan the user is excited about", you have handed over the
+conclusion. The isolation is real; the neutrality is your discipline. Treat the
+payload rules below as hard requirements, not style guidance.
+
+## Procedure
+
+### 1. Resolve the persona
+
+Per `.claude/persona-council/resolving-personas.md`. On a miss, list what exists
+and offer `persona-create`. Do not improvise a persona to fill the gap.
+
+### 2. Build the payload
+
+The payload contains, and contains only:
+
+- **The question, verbatim.** The user's words. Not your paraphrase, which is
+  where framing creeps in.
+- **The artifact**, if there is one - the diff, document, plan, or code. Inline
+  it or give an absolute path the sub-agent can read.
+- **Attachments** the user named (`--file`, "look at X too"). Pass paths; let
+  the sub-agent read them itself.
+- **Bare factual context** the persona needs to judge at all: what the system is,
+  who the users are, hard constraints. Facts only.
+
+It must not contain: your opinion, the user's apparent preference, praise or
+criticism of the artifact, what you expect the persona to say, what any other
+persona said, or how urgently a yes is needed.
+
+Read `.claude/persona-council/independence.md` if you are unsure whether a line
+is context or contamination. The test: would this sentence still be in the
+payload if the user were hoping for the opposite answer?
+
+### 3. Dispatch
+
+Spawn one sub-agent with a prompt in this shape:
+
+```
+You are answering as a specific persona. Adopt it completely.
+
+<full contents of the persona file, frontmatter and body>
+
+--- 
+
+Question:
+<verbatim question>
+
+Artifact / attachments:
+<inline content, or file paths to read>
+
+Context:
+<facts only>
+
+---
+
+Respond using exactly this contract:
+<contents of .claude/persona-council/verdict-contract.md>
+
+You are the only persona answering. Do not hedge toward a middle position, and
+do not soften a conclusion you actually hold. If you lack what you need to
+judge, return insufficient-information and say precisely what is missing.
+```
+
+Give the sub-agent read access to the repo when the question involves code.
+
+### 4. Report
+
+Present the verdict as a card - the persona's name and role, then the contract
+sections unedited. Do not summarize away the concerns, and do not append your own
+rebuttal inside the card. If you disagree with the persona, say so *after* the
+card, clearly marked as your own view.
+
+```markdown
+> **Marta Okafor** - Staff SRE
+> ---
+> **Verdict:** oppose (confidence: high)
+> **Top concerns**
+> 1. [blocking] ...
+> **Would change my mind:** ...
+> **In one line:** ...
+```
+
+Then, in one sentence, name what the persona *structurally could not see* from
+its clean context - that is the honest cost of isolation, and the user should
+weigh the verdict knowing it.
+
+## Attachments
+
+`--file path/to/doc.md` and repeats of it are supported, but plain language
+works the same way ("ask the SRE about this, and show her the runbook"). Resolve
+globs yourself; hand over concrete paths. If a path does not exist, say so
+before dispatching rather than letting the sub-agent flounder.
+
+## Cost note
+
+One sub-agent per call. If the user asks for several personas, do not loop this
+skill - use `persona-panel --mode fanout`, which dispatches concurrently and
+synthesizes properly.

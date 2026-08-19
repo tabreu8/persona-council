@@ -1,0 +1,42 @@
+{
+  "name": "persona-council",
+  "version": "0.1.0",
+  "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your coding agent.",
+  "type": "module",
+  "bin": {
+    "persona-council": "bin/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "commands",
+    "agents",
+    "reference",
+    "templates",
+    ".claude-plugin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "persona",
+    "agents",
+    "subagents",
+    "debate",
+    "red-team",
+    "skill",
+    "plugin"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.17"
+  }
+}
