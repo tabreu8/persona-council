@@ -37,14 +37,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Trusted publishing needs npm CLI >= 11.5.1 and Node >= 22.14; the
-      # '22' floating tag always resolves to a current 22.x, which satisfies
-      # both today. npm --version is logged so a future regression is visible
-      # in the run output rather than failing opaquely at the publish step.
+      # Trusted publishing needs npm CLI >= 11.5.1. Node 22's *bundled* npm is
+      # v10.x -- well short of that -- so `node-version: 22` alone silently
+      # broke this: the OIDC handshake never ran, npm publish fell back to an
+      # anonymous request, and the registry returned a 404 (not a 401/403,
+      # deliberately, so an unauthenticated caller can't learn a package
+      # exists) rather than any error naming auth as the problem. Node's
+      # bundled-npm mapping is not something to keep tracking by hand, so the
+      # explicit upgrade below decouples this from whichever Node line the
+      # runner defaults to. npm --version is logged so a future regression
+      # (bundled npm regressing below 11.5.1 again) is visible in the run
+      # output instead of failing opaquely at the publish step.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
       - run: npm --version
 
       - run: node --test
