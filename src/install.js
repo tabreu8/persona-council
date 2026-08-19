@@ -58,6 +58,10 @@ export function install(root, { force = false, target = 'claude' } = {}) {
   const installed = [];
   const claudeDir = path.join(root, '.claude');
 
+  // The target directory may not exist yet -- `init --dir ./new-project` is a
+  // reasonable thing to type, and the generic target writes to the root first.
+  fs.mkdirSync(root, { recursive: true });
+
   if (target === 'claude') {
     for (const asset of CLAUDE_ASSETS) {
       const from = path.join(packageRoot, asset.from);
@@ -70,7 +74,9 @@ export function install(root, { force = false, target = 'claude' } = {}) {
       }
     }
   } else {
-    // Generic agents get one portable operating manual plus the persona folder.
+    // Generic agents get one portable operating manual -- plus the reference
+    // docs that manual tells the reader to go and read. Shipping the manual
+    // without them leaves every skill citing files that do not exist.
     const guide = buildGenericGuide();
     const relPath = 'PERSONA-COUNCIL.md';
     const dest = path.join(root, relPath);
@@ -81,6 +87,16 @@ export function install(root, { force = false, target = 'claude' } = {}) {
       installed.push(relPath);
     } else {
       results.push({ path: relPath, status: 'skipped' });
+    }
+
+    const from = path.join(packageRoot, 'reference');
+    if (fs.existsSync(from)) {
+      for (const rel of walk(from)) {
+        const refPath = path.join('.claude', 'persona-council', rel);
+        const status = copyFile(path.join(from, rel), path.join(root, refPath), { force });
+        results.push({ path: refPath, status });
+        if (status !== 'skipped') installed.push(refPath);
+      }
     }
   }
 
@@ -175,6 +191,8 @@ function buildGenericGuide() {
     '# Persona Council — operating manual\n',
     'This file teaches any coding agent to run persona thinking and debate panels.',
     'Read it before responding to a persona request.\n',
+    'The reference documents cited throughout are installed alongside it, in',
+    '`.claude/persona-council/`. Read the one a section names before following it.\n',
   ];
   const skillsDir = path.join(packageRoot, 'skills');
   if (fs.existsSync(skillsDir)) {
@@ -182,7 +200,10 @@ function buildGenericGuide() {
       const file = path.join(skillsDir, name, 'SKILL.md');
       if (!fs.existsSync(file)) continue;
       const body = fs.readFileSync(file, 'utf8').replace(/^---[\s\S]*?---\n/, '');
-      parts.push(`\n---\n\n## ${name}\n\n${body.trim()}\n`);
+      // Demote the skill's own headings so they nest under its name instead of
+      // sitting beside it, which flattens the manual into one long list.
+      const nested = body.trim().replace(/^(#{1,5}) /gm, '#$1 ').replace(/^## persona-[a-z]+\n|^## council\n/m, '');
+      parts.push(`\n---\n\n## ${name}\n\n${nested}\n`);
     }
   }
   return `${parts.join('\n')}\n`;

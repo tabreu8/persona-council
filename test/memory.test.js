@@ -362,3 +362,71 @@ test('weighted recall counts major flaws for more than minor ones', async () => 
   assert.ok(majorOnly.weightedRecall > minorOnly.weightedRecall);
   assert.ok(majorOnly.caught >= 2);
 });
+
+test('memos carry every concern a seat raised — the retro reads these', () => {
+  // Regression: the memo once rendered only the one-line summaries, which left
+  // persona-retro unable to mark concerns realized from the command it names.
+  const record = {
+    ...panelRecord(),
+    verdicts: [{
+      persona: 'finance-lead',
+      verdict: 'endorse-with-conditions',
+      confidence: 'medium',
+      concerns: [
+        { blocking: true, text: 'Sample of 30 accounts is not representative.' },
+        { blocking: false, text: 'No calculator on the pricing page.' },
+      ],
+      changeMyMind: 'Replay four quarters and show the per-account spread.',
+      summary: 'Upside real, forecast is not.',
+    }],
+  };
+
+  const md = renderMemoMarkdown(record);
+  assert.match(md, /## What each seat raised/);
+  assert.match(md, /Sample of 30 accounts is not representative\./);
+  assert.match(md, /\*\*blocking\*\* — Sample of 30/);
+  assert.ok(!/\*\*blocking\*\* — No calculator/.test(md), 'non-blocking concerns are not marked blocking');
+  assert.match(md, /Would change my mind:.*per-account spread/);
+
+  const html = renderMemoHtml(record);
+  assert.match(html, /What each seat raised/);
+  assert.match(html, /Sample of 30 accounts is not representative\./);
+  assert.match(html, /class="blocking"/);
+  assert.match(html, /per-account spread/);
+});
+
+test('a memo with no concerns recorded omits the section rather than showing an empty one', () => {
+  const record = { ...panelRecord(), verdicts: [{ persona: 'a', verdict: 'endorse', summary: 'fine' }] };
+  assert.ok(!renderMemoMarkdown(record).includes('What each seat raised'));
+  assert.ok(!renderMemoHtml(record).includes('What each seat raised'));
+});
+
+test('the generic target ships the reference docs its manual cites', async () => {
+  // Regression: the manual referred to nine documents that target never installed.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persona-generic-'));
+  test.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  install(root, { target: 'generic' });
+
+  const manual = fs.readFileSync(path.join(root, 'PERSONA-COUNCIL.md'), 'utf8');
+  const cited = [...new Set([...manual.matchAll(/persona-council\/([a-z-]+\.md)/g)].map((m) => m[1]))];
+  assert.ok(cited.length >= 5, 'the manual should cite the shared references');
+
+  for (const file of cited) {
+    assert.ok(
+      fs.existsSync(path.join(root, '.claude', 'persona-council', file)),
+      `manual cites ${file} but the generic target does not install it`,
+    );
+  }
+});
+
+test('the generic manual nests each skill under its own name', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'persona-generic-h-'));
+  test.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  install(root, { target: 'generic' });
+
+  const manual = fs.readFileSync(path.join(root, 'PERSONA-COUNCIL.md'), 'utf8');
+  const h2 = [...manual.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  assert.ok(h2.includes('persona-panel'), 'skill names are the h2 level');
+  assert.ok(!h2.includes('Procedure'), 'a skill section must not sit beside the skill name');
+  assert.match(manual, /^### Procedure$/m);
+});

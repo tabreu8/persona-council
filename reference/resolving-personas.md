@@ -20,6 +20,10 @@ defaults: one local source at `.claude/personas`, writes go there.
 
 Sources are tried **in order**. The first source holding a matching id wins.
 
+On a plugin install nothing has been written to disk yet - no config, no
+`.claude/personas`. Assume the defaults rather than reporting a broken setup,
+and suggest `npx persona-council init` once if the user is settling in.
+
 ## 2. Resolve by source type
 
 **`local`** - read `<path>/<id>.md`. Use Glob/Read, not a shell `find`.

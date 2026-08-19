@@ -395,7 +395,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 51 tests, `node --test`, no framework.
+Zero runtime dependencies. 56 tests, `node --test`, no framework.
 
 Personas are **data, not sub-agents** — a deliberate departure from the obvious
 design. Writing them into `.claude/agents/` would make Claude Code auto-delegate

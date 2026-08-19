@@ -195,3 +195,14 @@ test('CLI reports unknown commands instead of doing something surprising', () =>
     return true;
   });
 });
+
+test('init creates the target directory if it does not exist yet', () => {
+  // Regression: `init --target generic --dir ./new` crashed writing the manual
+  // into a directory nobody had created.
+  for (const target of ['claude', 'generic']) {
+    const parent = sandbox();
+    const root = path.join(parent, 'not-created-yet', target);
+    assert.doesNotThrow(() => install(root, { target }));
+    assert.ok(fs.existsSync(path.join(root, '.claude', 'persona-council.config.json')));
+  }
+});

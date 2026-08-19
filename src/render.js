@@ -63,6 +63,22 @@ export function renderMemoMarkdown(record) {
     lines.push('');
   }
 
+  // The concerns are what a retro marks realized or not. Dropping them here
+  // would leave the memo unable to support the loop it exists to feed.
+  const withConcerns = (record.verdicts || []).filter((v) => (v.concerns || []).length || v.changeMyMind);
+  if (withConcerns.length) {
+    lines.push('## What each seat raised', '');
+    for (const v of withConcerns) {
+      lines.push(`**${v.persona}** · ${label(v.verdict).toLowerCase()}${v.confidence ? ` · ${v.confidence} confidence` : ''}`, '');
+      for (const concern of v.concerns || []) {
+        const text = concern.text || concern;
+        lines.push(`- ${concern.blocking ? '**blocking** — ' : ''}${text}`);
+      }
+      if (v.changeMyMind) lines.push('', `*Would change my mind:* ${v.changeMyMind}`);
+      lines.push('');
+    }
+  }
+
   if ((s.consensus || []).length) lines.push('## Where they agree', '', ...s.consensus.map((c) => `- ${c}`), '');
 
   const factual = s.factualDisputes || [];
@@ -166,6 +182,16 @@ td:last-child, th:last-child { padding-right: 0; }
 .chip.maybe { color: var(--maybe); background: var(--maybe-bg); }
 .chip.no { color: var(--no); background: var(--no-bg); }
 .chip.unknown { color: var(--unknown); background: var(--unknown-bg); }
+.seat-block { border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: .9rem; }
+.seat-head { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; margin-bottom: .7rem; }
+.seat-head .conf { color: var(--muted); font-size: .8rem; }
+.seat-block ul { margin: 0; }
+.seat-block li { font-size: .93rem; }
+.blocking { display: inline-block; padding: .05rem .4rem; border-radius: 4px; font-size: .68rem;
+            font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+            color: var(--no); background: var(--no-bg); vertical-align: .08em; }
+.cmm { margin: .8rem 0 0; font-size: .88rem; color: var(--muted); }
+.cmm span { font-weight: 650; }
 .dispute { border-left: 2px solid var(--line); padding: .1rem 0 .1rem 1rem; margin: 0 0 1.2rem; }
 .dispute .kind { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
 .dispute .resolve { color: var(--muted); font-size: .9rem; margin-top: .35rem; }
@@ -210,6 +236,20 @@ export function renderMemoHtml(record, { title } = {}) {
     </tr>`).join('');
     parts.push('<h2>Panel</h2>',
       `<div class="scroll"><table><thead><tr><th>Seat</th><th>Verdict</th><th>Confidence</th><th>Position</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+  }
+
+  const withConcerns = (record.verdicts || []).filter((v) => (v.concerns || []).length || v.changeMyMind);
+  if (withConcerns.length) {
+    parts.push('<h2>What each seat raised</h2>', withConcerns.map((v) => `<div class="seat-block">
+      <div class="seat-head"><span class="seat">${esc(v.persona)}</span>
+        <span class="chip ${VERDICT_TONE[v.verdict] || 'unknown'}">${esc(label(v.verdict))}</span>
+        ${v.confidence ? `<span class="conf">${esc(v.confidence)} confidence</span>` : ''}</div>
+      <ul>${(v.concerns || []).map((concern) => {
+        const text = esc(concern.text || concern);
+        return `<li>${concern.blocking ? '<span class="blocking">blocking</span> ' : ''}${text}</li>`;
+      }).join('')}</ul>
+      ${v.changeMyMind ? `<p class="cmm"><span>Would change my mind:</span> ${esc(v.changeMyMind)}</p>` : ''}
+    </div>`).join(''));
   }
 
   if ((s.consensus || []).length) {

@@ -53,6 +53,18 @@ is theirs, not yours.
 npx persona-council promote <scratch-run-id>
 ```
 
+## When nothing exists yet
+
+A plugin install copies the skills but never runs `init`, so on a fresh project
+there may be no config and no directories at all. That is fine - assume the
+defaults, and create the directory before writing to it (`mkdir -p`). Do not
+refuse to record something because the folder is missing.
+
+If the user is going to use this more than once, mention it once:
+
+> Worth running `npx persona-council init` - it writes the config and gives you
+> the CLI for memos, retros and track records.
+
 ## What a decision record holds
 
 Written by the panel run, at `<decisionsPath>/<id>/decision.json`:
