@@ -430,3 +430,123 @@ test('the generic manual nests each skill under its own name', () => {
   assert.ok(!h2.includes('Procedure'), 'a skill section must not sit beside the skill name');
   assert.match(manual, /^### Procedure$/m);
 });
+
+/**
+ * Guard against the bug class that has now bitten twice: a field the docs tell
+ * the agent to record, which the renderer quietly never emits. Every value below
+ * is a unique sentinel; if one stops appearing, something is being dropped.
+ */
+const FULL_RECORDS = {
+  evaluative: {
+    kind: 'evaluative',
+    question: 'Q-evaluative',
+    recordedAt: '2026-08-19T10:00:00Z',
+    topology: 'roundtable',
+    framing: 'debate',
+    roster: 'ROSTER-SENTINEL',
+    revisitWhen: 'REVISIT-SENTINEL',
+    verdicts: [{
+      persona: 'seat-one', verdict: 'oppose', confidence: 'high',
+      summary: 'SUMMARY-SENTINEL',
+      concerns: [{ blocking: true, text: 'CONCERN-SENTINEL' }],
+      changeMyMind: 'CHANGEMIND-SENTINEL',
+    }],
+    synthesis: {
+      decision: 'DECISION-SENTINEL',
+      consensus: ['CONSENSUS-SENTINEL'],
+      factualDisputes: [{ dispute: 'FACTUAL-SENTINEL', settledBy: 'SETTLEDBY-SENTINEL' }],
+      valueDisputes: [{ dispute: 'VALUE-SENTINEL', tradeoff: 'TRADEOFF-SENTINEL' }],
+      blindSpots: ['BLINDSPOT-SENTINEL'],
+      actionPlan: [{ step: 'STEP-SENTINEL', closes: 'CLOSES-SENTINEL' }],
+      confidenceWarning: 'WARNING-SENTINEL',
+    },
+  },
+  generative: {
+    kind: 'generative',
+    question: 'Q-generative',
+    framing: 'ideate',
+    contributions: [{
+      persona: 'seat-one',
+      ideas: [{ text: 'IDEA-SENTINEL', why: 'WHYMINE-SENTINEL' }],
+      bet: 'BET-SENTINEL',
+      cantSee: 'CANTSEE-SENTINEL',
+    }],
+    synthesis: {
+      summary: 'SUMMARY-SENTINEL',
+      clusters: [{ theme: 'THEME-SENTINEL', seats: ['seat-one'], ideas: ['CLUSTERIDEA-SENTINEL'] }],
+      unrepeatable: [{ idea: 'UNREPEATABLE-SENTINEL', persona: 'seat-one', why: 'ONLYWHY-SENTINEL' }],
+      nobodyProposed: ['NOBODYPROPOSED-SENTINEL'],
+      recommended: [{ step: 'TRY-SENTINEL', because: 'BECAUSE-SENTINEL' }],
+    },
+  },
+  reactions: {
+    kind: 'reactions',
+    question: 'Q-reactions',
+    framing: 'react',
+    reactions: [{
+      persona: 'seat-one',
+      firstReaction: 'FIRST-SENTINEL',
+      nextAction: 'NEXTACTION-SENTINEL',
+      whatWouldMakeMeCare: 'WOULDCARE-SENTINEL',
+      toAColleague: 'COLLEAGUE-SENTINEL',
+    }],
+    synthesis: {
+      summary: 'SUMMARY-SENTINEL',
+      split: 'SPLIT-SENTINEL',
+      landed: ['LANDED-SENTINEL'],
+      didNotLand: ['DIDNOTLAND-SENTINEL'],
+      unanswerable: 'UNANSWERABLE-SENTINEL',
+      nobodyMentioned: ['NOBODYMENTIONED-SENTINEL'],
+      recommended: [{ step: 'TRY-SENTINEL', because: 'BECAUSE-SENTINEL' }],
+    },
+  },
+};
+
+function sentinels(value, found = new Set()) {
+  if (typeof value === 'string' && value.endsWith('-SENTINEL')) found.add(value);
+  else if (Array.isArray(value)) value.forEach((v) => sentinels(v, found));
+  else if (value && typeof value === 'object') Object.values(value).forEach((v) => sentinels(v, found));
+  return found;
+}
+
+for (const [kind, record] of Object.entries(FULL_RECORDS)) {
+  test(`no ${kind} field is recorded and then silently dropped by the renderers`, () => {
+    const expected = [...sentinels(record)];
+    assert.ok(expected.length > 5, 'fixture should exercise a lot of fields');
+
+    for (const [format, output] of [['markdown', renderMemoMarkdown(record)], ['html', renderMemoHtml(record)]]) {
+      const missing = expected.filter((s) => !output.includes(s));
+      assert.deepEqual(missing, [], `${kind}/${format} dropped: ${missing.join(', ')}`);
+    }
+  });
+}
+
+test('a generative run is never reported as suspicious unanimity', () => {
+  // Regression: three seats contributing ideas were rendered as three agreeing
+  // verdicts, which tripped the consensus warning on a brainstorm.
+  const record = FULL_RECORDS.generative;
+  assert.equal(isUnanimous(record), false);
+  assert.ok(!renderMemoMarkdown(record).includes('Confidence warning'));
+  assert.ok(!renderMemoMarkdown(record).includes('may say more about the roster'));
+});
+
+test('only evaluative runs build persona track records', () => {
+  // Regression: a brainstorm recorded in the evaluative shape banked an
+  // "endorse" per contributing seat, flagging good personas as too agreeable.
+  const root = sandbox();
+  const { config } = loadConfig(root);
+
+  for (let i = 0; i < 3; i += 1) {
+    writeDecision(root, config, {
+      kind: 'generative',
+      question: `brainstorm ${i}`,
+      recordedAt: '2026-08-19T10:00:00Z',
+      verdicts: [{ persona: 'idea-haver', verdict: 'endorse' }, { persona: 'other', verdict: 'endorse' }],
+    });
+  }
+
+  assert.deepEqual(calibration(root, config), [], 'ideas are not endorsements');
+  assert.equal(memoryStats(root, config).decisions, 3);
+  assert.equal(memoryStats(root, config).evaluative, 0);
+  assert.deepEqual(memoryStats(root, config).awaitingRetro, [], 'a brainstorm never awaits an outcome');
+});

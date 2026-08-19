@@ -146,13 +146,18 @@ function modalVerdict(verdicts) {
 }
 
 /**
- * Persona track records, computed only from of-record decisions.
+ * Persona track records, computed only from of-record *evaluative* decisions.
  *
  * The honest signal is `concernsRealized`: a persona raised a concern, and the
  * retro says whether it actually came true. Everything else is context.
+ *
+ * Generative and reaction runs are excluded, and that exclusion is load-bearing.
+ * A brainstorm recorded in the evaluative shape banks an "endorse" for every
+ * seat that contributed an idea, which is how a perfectly good persona ends up
+ * flagged as "never dissents" for the crime of having ideas.
  */
 export function calibration(root, config) {
-  const decisions = listDecisions(root, config);
+  const decisions = listDecisions(root, config).filter((d) => (d.kind || 'evaluative') === 'evaluative');
   const stats = new Map();
 
   const seat = (id) => {
@@ -208,10 +213,13 @@ export function calibration(root, config) {
 
 export function memoryStats(root, config) {
   const decisions = listDecisions(root, config);
+  // Only an evaluative run can be right or wrong, so only those await a retro.
+  const evaluative = decisions.filter((d) => (d.kind || 'evaluative') === 'evaluative');
   return {
     scratch: listScratch(root, config).length,
     decisions: decisions.length,
-    withOutcome: decisions.filter((d) => d.outcome).length,
-    awaitingRetro: decisions.filter((d) => !d.outcome).map((d) => d.id),
+    evaluative: evaluative.length,
+    withOutcome: evaluative.filter((d) => d.outcome).length,
+    awaitingRetro: evaluative.filter((d) => !d.outcome).map((d) => d.id),
   };
 }

@@ -121,8 +121,14 @@ before dispatching rather than letting the sub-agent flounder.
 A single seat can be asked for more than a review. From
 `.claude/persona-council/framings.md`: a pre-mortem ("it's six months on and this
 failed - what happened?") or a steelman ("make the strongest case against this")
-from one well-chosen persona is often worth more than a five-seat review. Pick
-the framing from the user's intent and name it in your reply.
+from one well-chosen persona is often worth more than a five-seat review.
+
+If the framing is generative (`ideate`) or reactive (`react`), hand the seat the
+matching contract from `contribution-contracts.md` instead of the verdict
+contract. Asking one persona to "endorse" ideas it is being asked to invent
+produces the same nonsense it does across a whole panel.
+
+Pick the framing from the user's intent and name it in your reply.
 
 ## Cost note
 

@@ -1,0 +1,49 @@
+{
+  "case": "landing-headline",
+  "domain": "marketing",
+  "description": "Landing copy whose promises are unverifiable, unexplained, or contradicted by the company's own history. Best run as a `react` panel — the flaws surface as behaviour, not as verdicts.",
+  "flaws": [
+    {
+      "id": "ceiling-behaviour-unexplained",
+      "severity": "major",
+      "description": "The page promises a ceiling but never says what happens when you hit it — throttled, charged, emailed, cut off? This is the first question any buyer asks and the page stops there.",
+      "keywords": ["what happens", "hit the ceiling", "reach the cap", "at the cap", "throttl", "cut off", "unclear", "does not say", "doesn't say", "unanswered"]
+    },
+    {
+      "id": "no-price",
+      "severity": "major",
+      "description": "A pricing page with no price on it. The headline promises control over a number it never shows.",
+      "keywords": ["no price", "price", "how much", "number", "cost", "rate", "doesn't show"]
+    },
+    {
+      "id": "never-absolute",
+      "severity": "major",
+      "description": "'No surprises. Ever.' is an absolute promise about billing, made by a company whose own support queue is full of surprise-bill complaints. It reads as the claim it is trying to disprove.",
+      "keywords": ["never", "ever", "absolute", "overclaim", "promise", "indefensible", "heard that before", "vendor claim"]
+    },
+    {
+      "id": "unsourced-40-percent",
+      "severity": "major",
+      "description": "'Save an average of 40%' has no methodology, no sample and no basis anyone can check — and it cannot be true for every account, since usage pricing raises some bills.",
+      "keywords": ["40%", "average", "unsourced", "methodology", "sample", "compared to", "substantiat", "evidence", "claim"]
+    },
+    {
+      "id": "logo-permission",
+      "severity": "moderate",
+      "description": "Customer logos in the footer with no indication of permission — and at least one of these accounts is a churn risk or has already left.",
+      "keywords": ["logo", "permission", "consent", "trusted by", "churn", "left", "approval"]
+    },
+    {
+      "id": "vague-social-proof",
+      "severity": "moderate",
+      "description": "'Thousands of companies' and 'teams who hate surprises' are unfalsifiable filler that any competitor could copy verbatim.",
+      "keywords": ["thousands", "vague", "generic", "filler", "unfalsifiable", "any competitor", "boilerplate", "social proof"]
+    },
+    {
+      "id": "mixed-message",
+      "severity": "moderate",
+      "description": "'Set a ceiling' is a cost-control promise; 'grow into it' is a growth pitch. The page runs both at once and commits to neither.",
+      "keywords": ["mixed", "two different", "contradic", "cost control", "growth", "confus", "which one", "conflict"]
+    }
+  ]
+}

@@ -19,6 +19,8 @@ command names.
 | "what would X say", "think like X" (about live work) | `persona-think` | free, in-context |
 | "ask X", "get an unbiased read", "second opinion" | `persona-ask` | one clean verdict |
 | "the room", "panel", "council", "several views", "debate" | `persona-panel` | many seats |
+| "brainstorm", "give me ideas", "what angles", "what should we call it" | `persona-panel` (`ideate`) | generative, not a judgement |
+| "how would X react", "would this land", "what would customers think" | `persona-panel` (`react`) | reactions, not verdicts |
 | "it went badly", "we shipped it", "who was right" | `persona-retro` | close the loop |
 | "which personas do I have" | `persona-council list` | just answer it |
 
@@ -55,9 +57,15 @@ Climbing is a decision. Default down, not up.
 
 See `framings.md`. Map intent, do not ask them to choose:
 
+"give me ideas" → `ideate` · "how would they react" → `react` ·
 "what am I missing" → `premortem` · "tell me why I'm wrong" → `steelman` ·
 "is this ready" → `gate` · "A or B" → `options` · "break this" → `redteam` ·
 "have them argue" → `debate` · otherwise → `review`.
+
+**Check the kind before anything else.** If the thing being discussed does not
+exist yet, the run is generative and the verdict contract is the wrong tool -
+seats cannot endorse an idea they are being asked to invent. Getting this wrong
+produces fake verdicts, a false unanimity warning, and polluted track records.
 
 Name the framing you picked in the confirmation line.
 

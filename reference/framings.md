@@ -7,6 +7,15 @@ A framing is what the room is *asked to do*. A topology is how the seats are
 wired. They are independent: pick the framing from the user's intent, then the
 topology that serves it.
 
+Framings come in three kinds, and the kind decides which output contract the
+seats are given. Getting this wrong is not cosmetic: a brainstorm run under an
+evaluative contract files ideas under "concerns", reports a room that was never
+disagreeing as suspicious unanimity, and banks a false "endorse" against every
+seat's track record.
+
+**Evaluative** — something exists; the room judges it. Contract:
+`verdict-contract.md`.
+
 | Framing | The question put to the room | Default topology |
 |---|---|---|
 | `review` | "What do you make of this?" | fanout |
@@ -16,6 +25,20 @@ topology that serves it.
 | `options` | "Which of these should we pick, and why not the others?" | fanout |
 | `redteam` | "Break this, then make it survivable." | chain |
 | `debate` | "Argue it out until something gives." | roundtable |
+
+**Generative** — nothing exists yet; the room produces. Contract:
+`contribution-contracts.md`.
+
+| Framing | The question put to the room | Default topology |
+|---|---|---|
+| `ideate` | "What would you try? Give me what only your seat would think of." | fanout |
+
+**Reactive** — the room is not consulting, it is encountering. Contract:
+`contribution-contracts.md`.
+
+| Framing | The question put to the room | Default topology |
+|---|---|---|
+| `react` | "You just saw this. What do you actually do next?" | fanout |
 
 Say which framing you used. "I ran this as a pre-mortem" tells the user far more
 about what they are reading than "I ran a fanout panel".
@@ -75,10 +98,44 @@ usually because two people on the team already disagree and want it mapped.
 
 ---
 
+## ideate
+
+For brainstorms: campaign angles, product bets, names, approaches, objections to
+pre-empt, research questions worth asking.
+
+Every seat is asked for ideas **its lens specifically produces**, and to say for
+each one what about its seat produced it. An idea that could have come from any
+seat is filler; the whole return on running a room is the idea only one lens
+reaches.
+
+Fanout, always. Seats that see each other's ideas anchor on them immediately and
+the set collapses toward the first thing proposed.
+
+The synthesis clusters rather than ranks. Do not count votes — nobody was
+voting, and in a generative run the best idea is very often the one a single seat
+could see. See `contribution-contracts.md`.
+
+## react
+
+For market research and positioning tests. The persona is not evaluating: it is
+a person who just encountered the thing, and the output is **behaviour**, not
+opinion.
+
+"I'd find that interesting" is worthless. "I'd forward it to my finance lead and
+not follow up" is a result. Indifference is the most common honest reaction and
+the most useful one, so the contract makes room for it — a panel where every
+segment is intrigued is a panel of flattering fictions.
+
+Never average reactions into a sentiment. Report the split as behaviour.
+
+---
+
 ## Choosing without being asked
 
 Map intent to framing from how the user talks:
 
+- "give me ideas" / "brainstorm" / "what angles" / "what should we call it" → `ideate`
+- "how would X react" / "would this land" / "what would customers think" → `react`
 - "what could go wrong" / "what am I missing" → `premortem`
 - "poke holes" / "tell me why I'm wrong" → `steelman`
 - "is this ready" / "does this pass" → `gate`
@@ -89,3 +146,8 @@ Map intent to framing from how the user talks:
 
 Name the framing in the confirmation line so the user can redirect before you
 spend anything.
+
+The most common misroute is running a generative request as `review`. If the
+user is asking for something that does not exist yet — ideas, names, angles,
+approaches — it is `ideate`, no matter how much the request sounds like a
+question about quality.

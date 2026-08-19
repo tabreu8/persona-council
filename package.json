@@ -1,6 +1,6 @@
 {
   "name": "persona-council",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Add persona thinking, isolated persona querying, and multi-persona debate panels to your agent. For any decision, not just code.",
   "type": "module",
   "bin": {

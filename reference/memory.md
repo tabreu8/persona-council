@@ -72,6 +72,7 @@ Written by the panel run, at `<decisionsPath>/<id>/decision.json`:
 ```json
 {
   "id": "2026-08-19-usage-based-pricing",
+  "kind": "evaluative",
   "recordedAt": "2026-08-19T10:15:00Z",
   "question": "<verbatim>",
   "topology": "roundtable",
@@ -95,6 +96,13 @@ Written by the panel run, at `<decisionsPath>/<id>/decision.json`:
   "cost": { "subAgents": 7 }
 }
 ```
+
+`kind` is `evaluative`, `generative` or `reactions` (see
+`contribution-contracts.md`). It decides the record's shape - `verdicts` for
+evaluative runs, `contributions` for generative, `reactions` for reactive - and
+only evaluative runs feed track records or accept an outcome. Recording a
+brainstorm as evaluative banks a false endorsement against every seat that
+contributed, which is how a good persona gets flagged as too agreeable.
 
 `revisitWhen` is the field people skip and then regret. A decision without a
 trigger to revisit it is a decision nobody ever revisits.

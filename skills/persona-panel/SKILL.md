@@ -42,9 +42,25 @@ they keep convening by hand, offer to save it:
 > That's the third time you've run these three together. Want me to save it as
 > `pricing-council`?
 
-**Framing.** Pick from `framings.md` by intent - "what am I missing" is a
-pre-mortem, "tell me why I'm wrong" is a steelman, "is this ready" is a gate.
-Name the one you picked; it tells the user more about the output than the
+**Framing, and its kind.** Pick from `framings.md` by intent. The framing decides
+the run's **kind**, and the kind decides everything downstream - which contract
+the seats get, how the chairman synthesizes, and whether the run counts toward
+track records.
+
+| Kind | When | Contract |
+|---|---|---|
+| `evaluative` | something exists and the room judges it | `verdict-contract.md` |
+| `generative` | nothing exists yet and the room produces (`ideate`) | `contribution-contracts.md` |
+| `reactions` | the room encounters it as people, not judges (`react`) | `contribution-contracts.md` |
+
+The most common misroute is running a generative request as `review`. If the
+user wants ideas, angles, names or approaches, it is `ideate` - however much the
+request sounds like a question about quality. Forcing a brainstorm through the
+verdict contract files ideas under "concerns", reports a room that was never
+disagreeing as suspicious unanimity, and banks a false endorsement against every
+seat that had an idea.
+
+Name the framing you picked; it tells the user more about the output than the
 topology does.
 
 **Roster proposal.** If no personas are named, propose seats and say why each is
@@ -87,6 +103,9 @@ Dispatch concurrent seats **in a single message** so they run in parallel. Every
 seat gets: its full persona file, the brief, the framing instruction, and the
 verdict contract from `verdict-contract.md`.
 
+Every seat gets the contract its kind calls for - never the verdict contract on
+a generative or reactive run.
+
 Announce round transitions in roundtable mode so long runs stay legible.
 
 ### 5. Chairman synthesis
@@ -98,12 +117,21 @@ If `panel.citeCalibration` is on and there are decisions with outcomes, run
 It may weight by track record, and must say out loud when it does. The seats
 never see it - see `memory.md`.
 
-Two rules the chairman must not break:
+**On an evaluative run**, two rules the chairman must not break:
 
 - **Unanimity gets flagged, never celebrated.** If every seat agreed, the report
   says so and asks whether that reflects the proposal or the roster.
 - **Minority positions survive with attribution.** One correct objection is the
   whole reason to run a panel; it is never averaged away.
+
+**On a generative or reactive run**, the chairman's job is different and
+`contribution-contracts.md` spells it out. Do not look for consensus - nobody was
+disagreeing. Cluster, attribute, and name the ideas only one seat's lens could
+have produced. Never rank ideas by how many seats liked them: in a generative run
+the best idea is frequently the one a single seat could see.
+
+Calibration is passed to the chairman only on evaluative runs. There is no track
+record for having had an idea.
 
 ### 6. Persist
 
@@ -119,8 +147,13 @@ Get a timestamp with `date -u +%Y-%m-%dT%H:%M:%SZ`; never invent one.
 - **decision** → `<memory.decisionsPath>/<id>/decision.json`, id from the date
   and a short slug
 
-Write the JSON in the shape given in `memory.md`, including `revisitWhen` - the
-field everyone skips and then regrets. Then render the memo rather than
+Write the JSON in the shape given in `memory.md`. **Always record `kind`** - it
+is what keeps a brainstorm out of the track records. Include `revisitWhen` on
+evaluative runs; it is the field everyone skips and then regrets.
+
+Brainstorms and reaction runs are almost always scratch. They have no outcome to
+come back for, so recording one as a decision buys nothing and clutters the
+journal. Then render the memo rather than
 hand-writing it:
 
 ```bash

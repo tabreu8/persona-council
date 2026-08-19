@@ -33,9 +33,22 @@ function label(verdict) {
   return VERDICT_LABELS[verdict] || verdict || '—';
 }
 
+/** Runs that judge something. Only these produce verdicts or track records. */
+export function isEvaluative(record) {
+  return (record.kind || 'evaluative') === 'evaluative';
+}
+
 export function isUnanimous(record) {
+  // A generative room was never disagreeing, so "they all agreed" is not a
+  // finding about it -- flagging one would be a false alarm on a brainstorm.
+  if (!isEvaluative(record)) return false;
   const verdicts = (record.verdicts || []).map((v) => v.verdict).filter(Boolean);
   return verdicts.length > 1 && new Set(verdicts).size === 1;
+}
+
+function headline(record) {
+  const s = record.synthesis || {};
+  return s.decision || s.summary || '';
 }
 
 export function renderMemoMarkdown(record) {
@@ -53,7 +66,51 @@ export function renderMemoMarkdown(record) {
   ].filter(Boolean);
   if (meta.length) lines.push(meta.join(' · '), '');
 
-  if (s.decision) lines.push('## Decision', '', s.decision, '');
+  const head = headline(record);
+  if (head) lines.push(isEvaluative(record) ? '## Decision' : '## In short', '', head, '');
+
+  if ((record.contributions || []).length) {
+    lines.push('## Ideas', '');
+    for (const c of record.contributions) {
+      lines.push(`**${c.persona}**`, '');
+      for (const idea of c.ideas || []) {
+        lines.push(`- ${idea.text || idea}`);
+        if (idea.why) lines.push(`  - *why it's theirs:* ${idea.why}`);
+      }
+      if (c.bet) lines.push('', `*Would bet on:* ${c.bet}`);
+      if (c.cantSee) lines.push(`*Can't see:* ${c.cantSee}`);
+      lines.push('');
+    }
+  }
+
+  if ((record.reactions || []).length) {
+    lines.push('## Reactions', '');
+    for (const r of record.reactions) {
+      lines.push(`**${r.persona}**`, '');
+      if (r.firstReaction) lines.push(`- *First reaction:* ${r.firstReaction}`);
+      if (r.nextAction) lines.push(`- *What they do next:* ${r.nextAction}`);
+      if (r.whatWouldMakeMeCare) lines.push(`- *What would make them care:* ${r.whatWouldMakeMeCare}`);
+      if (r.toAColleague) lines.push(`- *To a colleague:* "${r.toAColleague}"`);
+      lines.push('');
+    }
+  }
+
+  if ((s.clusters || []).length) {
+    lines.push('## Clusters', '');
+    for (const cluster of s.clusters) {
+      lines.push(`**${cluster.theme}**${cluster.seats ? ` — ${cluster.seats.join(', ')}` : ''}`);
+      for (const idea of cluster.ideas || []) lines.push(`- ${idea}`);
+      lines.push('');
+    }
+  }
+
+  if ((s.unrepeatable || []).length) {
+    lines.push('## Only one seat could have said this', '');
+    for (const item of s.unrepeatable) {
+      lines.push(`- **${item.persona}** — ${item.idea}${item.why ? ` (${item.why})` : ''}`);
+    }
+    lines.push('');
+  }
 
   if ((record.verdicts || []).length) {
     lines.push('## Panel', '', '| Seat | Verdict | Confidence | Position |', '|---|---|---|---|');
@@ -93,13 +150,25 @@ export function renderMemoMarkdown(record) {
     }
   }
 
-  if ((s.blindSpots || []).length) lines.push('## Blind spots', '', ...s.blindSpots.map((b) => `- ${b}`), '');
+  if (s.split || (s.landed || []).length || (s.didNotLand || []).length || s.unanswerable) {
+    lines.push('## What landed', '');
+    if (s.split) lines.push(`**The split** — ${s.split}`, '');
+    if ((s.landed || []).length) lines.push('**Landed**', '', ...s.landed.map((l) => `- ${l}`), '');
+    if ((s.didNotLand || []).length) lines.push("**Didn't land**", '', ...s.didNotLand.map((l) => `- ${l}`), '');
+    if (s.unanswerable) lines.push(`**The question nobody could answer** — ${s.unanswerable}`, '');
+  }
 
-  if ((s.actionPlan || []).length) {
-    lines.push('## Action plan', '');
-    s.actionPlan.forEach((step, i) => {
+  const missed = s.blindSpots || s.nobodyProposed || s.nobodyMentioned || [];
+  if (missed.length) {
+    lines.push(isEvaluative(record) ? '## Blind spots' : '## What nobody said', '', ...missed.map((b) => `- ${b}`), '');
+  }
+
+  const plan = s.actionPlan || s.recommended || [];
+  if (plan.length) {
+    lines.push(isEvaluative(record) ? '## Action plan' : '## What to try first', '');
+    plan.forEach((step, i) => {
       const text = step.step || step;
-      const closes = step.closes ? ` — closes: ${step.closes}` : '';
+      const closes = step.closes ? ` — closes: ${step.closes}` : (step.because ? ` — ${step.because}` : '');
       lines.push(`${i + 1}. ${text}${closes}`);
     });
     lines.push('');
@@ -190,6 +259,10 @@ td:last-child, th:last-child { padding-right: 0; }
 .blocking { display: inline-block; padding: .05rem .4rem; border-radius: 4px; font-size: .68rem;
             font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
             color: var(--no); background: var(--no-bg); vertical-align: .08em; }
+.why { display: block; color: var(--muted); font-size: .82rem; margin-top: .2rem; }
+.rx { margin-bottom: .55rem; font-size: .93rem; }
+.rx span { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+           color: var(--muted); font-weight: 650; margin-bottom: .1rem; }
 .cmm { margin: .8rem 0 0; font-size: .88rem; color: var(--muted); }
 .cmm span { font-weight: 650; }
 .dispute { border-left: 2px solid var(--line); padding: .1rem 0 .1rem 1rem; margin: 0 0 1.2rem; }
@@ -213,7 +286,8 @@ export function renderMemoHtml(record, { title } = {}) {
   const parts = [];
 
   parts.push(`<title>${esc(heading.slice(0, 90))}</title>`, `<style>${STYLE}</style>`, '<div class="wrap">');
-  parts.push(`<p class="eyebrow">${record.mode === 'scratch' ? 'Scratch run — not of record' : 'Decision memo'}</p>`);
+  const kindLabel = { generative: 'Idea set', reactions: 'Reactions' }[record.kind] || 'Decision memo';
+  parts.push(`<p class="eyebrow">${record.mode === 'scratch' ? 'Scratch run — not of record' : kindLabel}</p>`);
   parts.push(`<h1>${esc(heading)}</h1>`);
 
   const meta = [
@@ -225,7 +299,42 @@ export function renderMemoHtml(record, { title } = {}) {
   ].join('');
   if (meta) parts.push(`<p class="meta">${meta}</p>`);
 
-  if (s.decision) parts.push('<h2>Decision</h2>', `<div class="decision">${esc(s.decision)}</div>`);
+  const head = headline(record);
+  if (head) {
+    parts.push(`<h2>${isEvaluative(record) ? 'Decision' : 'In short'}</h2>`, `<div class="decision">${esc(head)}</div>`);
+  }
+
+  if ((record.contributions || []).length) {
+    parts.push('<h2>Ideas</h2>', record.contributions.map((cb) => `<div class="seat-block">
+      <div class="seat-head"><span class="seat">${esc(cb.persona)}</span></div>
+      <ul>${(cb.ideas || []).map((idea) => `<li>${esc(idea.text || idea)}${idea.why ? `<span class="why">why it's theirs: ${esc(idea.why)}</span>` : ''}</li>`).join('')}</ul>
+      ${cb.bet ? `<p class="cmm"><span>Would bet on:</span> ${esc(cb.bet)}</p>` : ''}
+      ${cb.cantSee ? `<p class="cmm"><span>Can't see:</span> ${esc(cb.cantSee)}</p>` : ''}
+    </div>`).join(''));
+  }
+
+  if ((record.reactions || []).length) {
+    const row = (k, v) => (v ? `<div class="rx"><span>${k}</span>${esc(v)}</div>` : '');
+    parts.push('<h2>Reactions</h2>', record.reactions.map((r) => `<div class="seat-block">
+      <div class="seat-head"><span class="seat">${esc(r.persona)}</span></div>
+      ${row('First reaction', r.firstReaction)}
+      ${row('What they do next', r.nextAction)}
+      ${row('What would make them care', r.whatWouldMakeMeCare)}
+      ${r.toAColleague ? `<div class="rx"><span>To a colleague</span>&ldquo;${esc(r.toAColleague)}&rdquo;</div>` : ''}
+    </div>`).join(''));
+  }
+
+  if ((s.clusters || []).length) {
+    parts.push('<h2>Clusters</h2>', s.clusters.map((cl) => `<div class="dispute">
+      <div class="kind">${esc(cl.theme)}${cl.seats ? ` · ${esc(cl.seats.join(', '))}` : ''}</div>
+      <ul>${(cl.ideas || []).map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+    </div>`).join(''));
+  }
+
+  if ((s.unrepeatable || []).length) {
+    parts.push('<h2>Only one seat could have said this</h2>',
+      `<ul>${s.unrepeatable.map((i) => `<li><strong>${esc(i.persona)}</strong> — ${esc(i.idea)}${i.why ? ` <span class="closes">(${esc(i.why)})</span>` : ''}</li>`).join('')}</ul>`);
+  }
 
   if ((record.verdicts || []).length) {
     const rows = record.verdicts.map((v) => `<tr>
@@ -268,16 +377,30 @@ export function renderMemoHtml(record, { title } = {}) {
     </div>`).join(''));
   }
 
-  if ((s.blindSpots || []).length) {
-    parts.push('<h2>Blind spots</h2>', `<ul>${s.blindSpots.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>`);
+  if (s.split || (s.landed || []).length || (s.didNotLand || []).length || s.unanswerable) {
+    const block = (kind, body) => `<div class="dispute"><div class="kind">${kind}</div>${body}</div>`;
+    parts.push('<h2>What landed</h2>', [
+      s.split ? block('The split', `<div>${esc(s.split)}</div>`) : '',
+      (s.landed || []).length ? block('Landed', `<ul>${s.landed.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`) : '',
+      (s.didNotLand || []).length ? block("Didn't land", `<ul>${s.didNotLand.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`) : '',
+      s.unanswerable ? block('The question nobody could answer', `<div>${esc(s.unanswerable)}</div>`) : '',
+    ].join(''));
   }
 
-  if ((s.actionPlan || []).length) {
-    const items = s.actionPlan.map((step) => {
+  const missed = s.blindSpots || s.nobodyProposed || s.nobodyMentioned || [];
+  if (missed.length) {
+    parts.push(`<h2>${isEvaluative(record) ? 'Blind spots' : 'What nobody said'}</h2>`,
+      `<ul>${missed.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>`);
+  }
+
+  const plan = s.actionPlan || s.recommended || [];
+  if (plan.length) {
+    const items = plan.map((step) => {
       const text = esc(step.step || step);
-      return `<li>${text}${step.closes ? ` <span class="closes">— closes: ${esc(step.closes)}</span>` : ''}</li>`;
+      const note = step.closes ? `— closes: ${step.closes}` : (step.because || '');
+      return `<li>${text}${note ? ` <span class="closes">${esc(note)}</span>` : ''}</li>`;
     }).join('');
-    parts.push('<h2>Action plan</h2>', `<ol>${items}</ol>`);
+    parts.push(`<h2>${isEvaluative(record) ? 'Action plan' : 'What to try first'}</h2>`, `<ol>${items}</ol>`);
   }
 
   if (record.revisitWhen) parts.push('<h2>Revisit when</h2>', `<p>${esc(record.revisitWhen)}</p>`);

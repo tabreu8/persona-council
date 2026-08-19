@@ -185,6 +185,26 @@ the next one up would add. Most questions are answered at `ask`.
 | `chain` | N + 1 | A hardened artifact, anchored to seat one |
 | `roundtable` | N × rounds + 1 | An argued-out decision, positions that moved |
 
+### Not everything is a verdict
+
+A council that can only judge is half a tool. Plenty of persona work is about
+things that **don't exist yet** — campaign angles, product bets, names — or about
+how something **lands** with people who aren't evaluating it at all.
+
+Ask a persona to "endorse" a brainstorm and you get nonsense: fake verdicts,
+`confidence: low` on an idea, and the ideas themselves filed under *concerns*.
+So runs come in three kinds, and the kind is recorded:
+
+| Kind | The room is asked to | You get back |
+|---|---|---|
+| **evaluative** | judge something that exists | verdicts, dissent, blocking concerns |
+| **generative** | produce options from its lens | ideas with provenance, clustered |
+| **reactions** | respond as people, not judges | behaviour — what they'd actually do next |
+
+Only evaluative runs feed track records. There is no such thing as being right
+or wrong about an idea you proposed, and counting one as an endorsement is how a
+perfectly good persona gets flagged as too agreeable.
+
 ### Ask the room the right question
 
 A **framing** is what the room is asked to do; a **topology** is how the seats
@@ -193,6 +213,8 @@ by name.
 
 | You say | Framing | What the room is asked |
 |---|---|---|
+| "give me angles" | **ideate** | What would you try? Give me what only *your* seat thinks of |
+| "how would they react" | **react** | You just saw this. What do you actually do next? |
 | "what am I missing" | **pre-mortem** | It's six months on and this failed. What happened? |
 | "tell me why I'm wrong" | **steelman** | The strongest honest case against your position |
 | "is this ready" | **gate** | Pass/fail against a written standard, verbatim |
@@ -200,8 +222,18 @@ by name.
 | "break this" | **red team** | Attack, repair, then attack the repair |
 | "have them argue" | **debate** | Roundtable until something gives |
 
-The pre-mortem is the most underused of these. Putting seats *after* the failure
-surfaces concrete mechanisms instead of vague risk.
+Two of these are worth calling out. The **pre-mortem** is the most underused —
+putting seats *after* the failure surfaces concrete mechanisms instead of vague
+risk. And **react** is the one people don't expect: the persona isn't consulting,
+it's a person who just encountered the thing, so the output is behaviour.
+*"I'd forward it to my finance lead and not follow up"* is a result;
+*"I'd find that interesting"* is worthless. Indifference is a finding — a panel
+where every segment is intrigued is a panel of flattering fictions.
+
+A generative run is synthesized completely differently: no consensus (nobody was
+disagreeing), no vote-counting. It clusters ideas, then names **the ones only one
+seat's lens could have produced** — the analogue of preserved dissent, and the
+entire return on convening a room instead of asking once.
 
 ---
 
@@ -358,7 +390,7 @@ Code has a compiler to tell you that you were wrong. Positioning doesn't.
 
 | Deciding | A room worth convening |
 |---|---|
-| **Product** | the customer who churned last month · the engineer who has to build it · the exec who has to fund it |
+| **Product ideas** | the customer who churned last month · the engineer who has to build it · the exec who has to fund it |
 | **Marketing** | a competitor's head of marketing · a journalist who has been pitched this exact claim before · the buyer who already doesn't believe you |
 | **Pricing** | sales · finance · the person who answers the phone after the invoice goes out |
 | **Hiring** | the person who would report to them · the peer who'd cover their gaps |
@@ -367,6 +399,10 @@ Code has a compiler to tell you that you were wrong. Positioning doesn't.
 
 The best seat in any room is usually the one that loses something if you turn out
 to be right.
+
+Same seats, different questions: *evaluate* the pricing proposal, *ideate*
+campaign angles for it, then *react* to the landing page as the buyer. One
+roster, three kinds of run.
 
 ---
 
@@ -395,7 +431,9 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 56 tests, `node --test`, no framework.
+Zero runtime dependencies. 61 tests, `node --test`, no framework — including a
+guard that every field the docs tell an agent to record actually reaches the
+memo, because "recorded and silently dropped" has been the most common bug here.
 
 Personas are **data, not sub-agents** — a deliberate departure from the obvious
 design. Writing them into `.claude/agents/` would make Claude Code auto-delegate

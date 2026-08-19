@@ -36,6 +36,11 @@ their dates and decisions and ask which. If none fit, say so - an outcome with n
 decision behind it has nothing to calibrate, though you can offer to record the
 decision retrospectively and mark it as such.
 
+Only **evaluative** decisions can carry an outcome. A brainstorm or a reaction
+run has nothing to be right or wrong about - if the record's `kind` is
+`generative` or `reactions`, say so and stop. The useful follow-up there is a
+fresh run, not a retro.
+
 Only `decisions/` can carry an outcome. If what they are describing was a scratch
 run, say so and offer to promote it (`memory.md`), noting that a retro on a
 promoted brainstorm is weaker evidence because nobody committed to it at the time.
