@@ -28,6 +28,18 @@ function walk(dir, base = dir) {
   return entries;
 }
 
+/**
+ * Forward slashes are valid path input on every OS Node runs on -- Windows
+ * accepts '/' as a separator, POSIX just never accepts '\'. So paths that get
+ * displayed or written into the install manifest are normalized to '/' here,
+ * once, rather than carrying native separators that only round-trip on the OS
+ * that wrote them. A manifest is not gitignored and nothing stops a team from
+ * committing one written on Windows and reading it back on Mac or Linux.
+ */
+function toPosix(relPath) {
+  return relPath.split(path.sep).join('/');
+}
+
 function copyFile(from, to, { force }) {
   fs.mkdirSync(path.dirname(to), { recursive: true });
   const exists = fs.existsSync(to);
@@ -67,7 +79,7 @@ export function install(root, { force = false, target = 'claude' } = {}) {
       const from = path.join(packageRoot, asset.from);
       if (!fs.existsSync(from)) continue;
       for (const rel of walk(from)) {
-        const relPath = path.join(asset.to, rel);
+        const relPath = toPosix(path.join(asset.to, rel));
         const status = copyFile(path.join(from, rel), path.join(root, relPath), { force });
         results.push({ path: relPath, status });
         if (status !== 'skipped') installed.push(relPath);
@@ -92,7 +104,7 @@ export function install(root, { force = false, target = 'claude' } = {}) {
     const from = path.join(packageRoot, 'reference');
     if (fs.existsSync(from)) {
       for (const rel of walk(from)) {
-        const refPath = path.join('.claude', 'persona-council', rel);
+        const refPath = toPosix(path.join('.claude', 'persona-council', rel));
         const status = copyFile(path.join(from, rel), path.join(root, refPath), { force });
         results.push({ path: refPath, status });
         if (status !== 'skipped') installed.push(refPath);
@@ -104,9 +116,9 @@ export function install(root, { force = false, target = 'claude' } = {}) {
   const effective = configExists ? config : defaultConfig();
   if (!configExists || force) {
     saveConfig(root, effective);
-    results.push({ path: path.join('.claude', 'persona-council.config.json'), status: configExists ? 'updated' : 'created' });
+    results.push({ path: '.claude/persona-council.config.json', status: configExists ? 'updated' : 'created' });
   } else {
-    results.push({ path: path.join('.claude', 'persona-council.config.json'), status: 'unchanged' });
+    results.push({ path: '.claude/persona-council.config.json', status: 'unchanged' });
   }
 
   const runtimeDirs = [

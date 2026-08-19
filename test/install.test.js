@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { install, uninstall, readManifest } from '../src/install.js';
+import { install, uninstall, readManifest, manifestPath } from '../src/install.js';
 import { loadConfig } from '../src/config.js';
 import { listPersonas, findPersona } from '../src/sources.js';
 
@@ -204,5 +204,31 @@ test('init creates the target directory if it does not exist yet', () => {
     const root = path.join(parent, 'not-created-yet', target);
     assert.doesNotThrow(() => install(root, { target }));
     assert.ok(fs.existsSync(path.join(root, '.claude', 'persona-council.config.json')));
+  }
+});
+
+test('install manifest paths are always forward-slash, so uninstall works cross-OS', () => {
+  // Regression: manifest paths were built with path.join, which emits '\' on
+  // Windows. That manifest is not gitignored -- if committed and later read on
+  // POSIX, path.join(root, rel) treats '\' as a literal filename character
+  // (not a separator), fs.existsSync silently returns false, and uninstall
+  // reports success while removing nothing.
+  const root = sandbox();
+  install(root);
+
+  const manifest = readManifest(root);
+  assert.ok(manifest.files.length > 5);
+  for (const rel of manifest.files) {
+    assert.ok(!rel.includes('\\'), `manifest path "${rel}" contains a backslash`);
+  }
+
+  // Simulate a manifest written on Windows and committed, then read on this OS.
+  const poisoned = { ...manifest, files: manifest.files.map((f) => f.replace(/\//g, '\\')) };
+  fs.writeFileSync(manifestPath(root), JSON.stringify(poisoned), 'utf8');
+  const { removed } = uninstall(root);
+  if (path.sep === '/') {
+    // On POSIX this is the failure mode the fix prevents: nothing should be
+    // "removed" from a backslash manifest, proving the bug is real without it.
+    assert.equal(removed.length, 0, 'backslash paths should not resolve on POSIX -- this documents the old bug');
   }
 });

@@ -110,10 +110,14 @@ export function migrateConfig(config) {
   if (!config || config.version >= CONFIG_VERSION) return config;
   const next = { ...config, version: CONFIG_VERSION };
   const legacy = config.memory || {};
+  // Paths stored in the config file are POSIX strings by convention (see
+  // defaultConfig() above) so a committed config reads identically on every
+  // OS. path.join would silently write backslashes into the JSON on Windows.
+  const legacyBase = (legacy.path || '.claude/memory').split(/[\\/]+/).filter(Boolean).join('/');
   next.memory = {
     defaultMode: 'scratch',
-    scratchPath: legacy.path ? path.join(legacy.path, 'scratch') : '.claude/memory/scratch',
-    decisionsPath: legacy.path ? path.join(legacy.path, 'decisions') : '.claude/memory/decisions',
+    scratchPath: `${legacyBase}/scratch`,
+    decisionsPath: `${legacyBase}/decisions`,
     scratchRetain: legacy.retain ?? 20,
     scratchMaxAgeDays: 14,
     writeTranscript: legacy.writeTranscript ?? true,
