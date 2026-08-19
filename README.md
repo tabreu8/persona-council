@@ -1,102 +1,127 @@
-# persona-council
+<h1 align="center">persona-council</h1>
 
-Give your coding agent a council: named personas with their own stakes and
-blind spots, queried in isolation and made to argue with each other.
+<p align="center">
+  <em>Your agent already tells you what you want to hear.<br>
+  This gives it a room full of people who won't.</em>
+</p>
 
-```bash
-npx persona-council init
-```
+<p align="center">
+  <code>npx persona-council init</code>
+</p>
 
-Then, in your agent:
+---
 
-```
-/persona-create   a staff SRE who has carried the pager for eight years
-/persona-think    sre-oncall  is this migration plan sane?
-/persona-ask      sre-oncall  review this rollout plan  --file docs/rollout.md
-/persona-panel    --personas="sre-oncall,product-lead,vc-skeptic" --mode=roundtable --prompt="Ship on Friday?"
-```
+## What it actually looks like
 
-## Why
-
-Asking a model "what do you think?" gets you the house voice. Asking it "what
-would a skeptical VC think?" gets you the house voice wearing a hat. The
-difference between those two and something genuinely useful comes down to three
-things this package is built around:
-
-- **A persona needs something to lose.** Every persona carries a `stake` (what
-  it is personally accountable for) and a `mandate` (what obliges it to say no).
-  Adjective-soup personas — "thorough, detail-oriented" — agree with everything.
-- **A second opinion has to be uncontaminated.** `persona-ask` runs a persona in
-  a sub-agent that has never seen your conversation, with a payload that is
-  forbidden from carrying your framing.
-- **Agreement is the failure mode, not the goal.** Five personas on one model
-  converge unless you fight it. The chairman synthesis treats unanimity as
-  something to flag, keeps minority positions with attribution, and hunts for
-  what the whole roster structurally cannot see.
-
-## Install
-
-**As an npm package** — works with any agent that reads `.claude/`:
-
-```bash
-npx persona-council init            # into the current project
-npx persona-council init --global   # into ~/.claude
-npx persona-council init --target generic   # one portable PERSONA-COUNCIL.md instead
-```
-
-Re-running is safe: files you have edited are left alone unless you pass
-`--force`.
-
-**As a Claude Code plugin:**
+You ask your agent a question you already have an opinion about. Normally it
+agrees with you. Instead:
 
 ```
-/plugin marketplace add tabreu8/persona-council
-/plugin install persona-council@persona-council
+/persona-panel --personas="sre-oncall,product-lead,vc-skeptic" --mode=roundtable
+               --prompt="Ship the payments migration Friday afternoon?"
 ```
 
-Both install the same skills, commands, sub-agents and reference docs.
+Three personas answer independently. None of them sees your conversation. None
+of them sees the others. Then they get each other's arguments back — stripped of
+names, so they argue with the reasoning instead of deferring to the job title —
+and a chairman writes this up:
 
-**No personas ship with this package.** A persona you did not write is a
-viewpoint you cannot calibrate against, and generic bundled ones would mostly
-teach the tool to produce generic advice. Write your first one in about two
-minutes with `/persona-create`.
+```markdown
+## Decision
+Do not ship Friday. Ship Tuesday morning. Confidence: high — the one seat that
+endorsed Friday withdrew it after seeing the rollback argument.
 
-## The four capabilities
+## Panel
+| Seat         | Verdict                 | Confidence | Position                                    |
+|--------------|-------------------------|------------|---------------------------------------------|
+| sre-oncall   | oppose                  | high       | No tested rollback; blast radius is all of  |
+|              |                         |            | checkout, and half the team is off Monday.  |
+| product-lead | endorse-with-conditions | medium     | Was Friday; moved to Tuesday in round 2.    |
+| vc-skeptic   | insufficient-information| —          | Can't judge without the revenue-at-risk     |
+|              |                         |            | number nobody has produced.                 |
 
-| | Sees your conversation | Spawns | Use it for |
+## Where they disagree
+**Factual** — Is the rollback tested? → settled by: run the documented rollback
+against staging with production-shaped data. One command, forty minutes.
+**Values** — Two days of slip against a quarter-end commitment. Your call:
+nobody on this panel owns both sides of that tradeoff.
+
+## Blind spots
+No seat raised customer support load. A Friday payments incident lands on a
+skeleton weekend rota — none of these three personas carries that pager, so
+none of them costed it.
+
+## Confidence warning
+None. Two seats disagreed on substance and one refused to guess.
+```
+
+*(Illustrative — your personas, your question, your disagreements.)*
+
+The last section is the one that matters. If all three had endorsed it, that box
+would say so and ask whether you learned something about the plan or just
+something about your roster.
+
+---
+
+## The thesis
+
+**Five personas that agree are worse than one honest answer.** They launder a
+single opinion as a consensus and hand you confidence you didn't earn.
+
+Every persona here is the same model underneath. Left alone, they converge —
+politely, plausibly, uselessly. So the entire design is counter-pressure against
+that one failure:
+
+| The pressure | Where it lives |
+|---|---|
+| A persona needs **something to lose** | Every persona carries a `stake` — what it is personally accountable for — and a `mandate`: the written obligation to say no, and the conditions for saying it. Adjective soup ("thorough, detail-oriented") describes nobody and agrees with everything. |
+| A second opinion must be **uncontaminated** | `persona-ask` runs in a sub-agent that has never seen your chat. The payload rules forbid your framing, your paraphrase, and every adjective describing the thing under review. |
+| Round two must be about **arguments, not authority** | Roundtable digests are anonymized by default. A seat that knows which position came from "the security expert" defers to it. A seat reading an unlabeled argument has to actually judge it. |
+| Unanimity is a **finding, not a result** | The chairman is forbidden from reporting clean consensus without flagging it, from averaging verdicts into "broadly positive," and from quietly dropping the one seat that objected. |
+
+And one rule pointed at the tool itself: **no politeness directives.** No skill
+here ever tells a persona to be constructive, balanced, or considerate. Those
+three words are the most efficient way known to flatten a persona back into the
+house voice you were trying to escape.
+
+---
+
+## Four tools, and the honest difference between them
+
+| | Sees your chat | Spawns | Good for |
 |---|---|---|---|
-| `persona-create` | yes | no | Authoring and editing personas |
-| `persona-think` | **yes** | no | A fast in-context perspective check |
-| `persona-ask` | no | 1 sub-agent | A second opinion you can actually trust |
-| `persona-panel` | no | N + chairman | A decision weighed from several angles |
+| **`persona-create`** | yes | — | Authoring a persona sharp enough to be worth asking |
+| **`persona-think`** | **yes** | — | A fast gut-check on live work |
+| **`persona-ask`** | no | 1 | A second opinion you can actually lean on |
+| **`persona-panel`** | no | N + chairman | A decision weighed from several angles |
 
-`persona-think` is the fast, contaminated one — the persona sees everything
-you have discussed, including what you seem to want to hear. That is fine for a
-quick gut-check on live work and wrong for anything you intend to rely on. The
-skill says so out loud rather than pretending otherwise.
+`persona-think` is the **contaminated** one, and the skill says so out loud
+instead of quietly implying otherwise. The persona sees your whole conversation,
+including every signal about what you're hoping to hear. That's a fine trade for
+a thirty-second perspective check and the wrong tool for anything you'll defend
+in a design review.
 
-### Panel topologies
+### Three ways to run a room
 
-- **`fanout`** — every persona answers the same clean question independently,
-  in parallel. Nobody sees anybody. Use it when you want honest disagreement.
-- **`chain`** — visionary → auditor → executor. Each seat receives the artifact
-  and the previous verdict, and hardens it. Deep, but anchored to whoever went
-  first; the output says so.
-- **`roundtable`** — an independent first round, then an **anonymized** digest
-  circulated back so seats respond to arguments rather than to job titles, until
-  no new arguments appear or `maxRounds` is hit. A dissenter seat is injected if
-  everyone agrees too early.
+- **`fanout`** — everyone answers the same clean question in parallel, blind to
+  each other. Maximum independence. This is the default and usually the right one.
+- **`chain`** — visionary → auditor → executor. Each seat hardens what the last
+  one produced. Deep, but anchored to whoever went first — and the output says so
+  rather than pretending the third seat judged freely.
+- **`roundtable`** — an independent first round, then anonymized digests
+  circulating until nobody has a new argument or `maxRounds` is hit. If everyone
+  agrees too early, a dissenter seat is injected whose only brief is to build the
+  strongest case against the emerging consensus.
 
-Every panel ends with a chairman synthesis: decision, consensus-vs-dissent
-table, factual disputes (with the test that settles each) separated from value
-disputes (escalated, never adjudicated), blind spots, and an action plan.
+Every run is persisted to `.claude/memory/` as JSON *and* as a transcript a human
+will actually read.
 
-Runs are persisted to `.claude/memory/` as both JSON and a readable transcript.
+---
 
-## Personas
+## A persona is a file, not a framework
 
-A persona is a plain markdown file with YAML frontmatter — readable by the CLI,
-by sub-agents, and by a human with no tooling at all.
+Plain markdown with frontmatter. Readable by the CLI, by sub-agents, and by a
+person with no tooling at all.
 
 ```markdown
 ---
@@ -119,74 +144,123 @@ blind_spots:
 You are Marta Okafor...
 ```
 
-Full field reference: [`reference/persona-schema.md`](reference/persona-schema.md).
-`npx persona-council doctor` will tell you which of your personas are too soft
-to be worth asking.
+The `blind_spots` field is not decoration. It is what lets the chairman *weight*
+a verdict instead of just stacking it, and what stops a persona bluffing past the
+edge of what it actually knows.
 
-## Persona sources
+> **No personas ship with this package.** Deliberately. A persona you didn't
+> write is a viewpoint you can't calibrate, and a bundled set of generic ones
+> would mostly teach the tool to produce generic advice. `/persona-create` builds
+> your first in about two minutes — and `npx persona-council doctor` will tell
+> you which of your personas are too soft to bother asking.
 
-Personas do not have to live in your repo. Sources are declared in
-`.claude/persona-council.config.json` and searched in order — first match wins.
+---
+
+## Personas don't have to live in your repo
+
+Sources are declared in config and searched in order — first match wins.
 
 ```jsonc
 {
   "sources": [
-    { "id": "local", "type": "local", "path": ".claude/personas", "writable": true },
-    { "id": "shared", "type": "git", "url": "git@github.com:acme/personas.git", "subpath": "personas" },
-    { "id": "notion", "type": "mcp", "server": "notion", "resolve": "Find the persona in the 'Personas' database..." }
+    { "id": "local",  "type": "local", "path": ".claude/personas", "writable": true },
+    { "id": "shared", "type": "git",   "url": "git@github.com:acme/personas.git" },
+    { "id": "notion", "type": "mcp",   "server": "notion",
+      "resolve": "Find the persona in the 'Personas' database..." }
   ],
   "writeTo": "local"
 }
 ```
 
-- **`local`** — a directory of markdown files.
-- **`git`** — a shared team repo, shallow-cloned into a cache by
-  `npx persona-council sources sync`.
-- **`mcp`** — anywhere your agent can reach with MCP tools: a Notion database, a
-  wiki, an internal service. The CLI has no MCP client, so it does not pretend
-  to; the `resolve` field is an instruction your *agent* follows at runtime,
-  after which it normalizes the result into the persona schema and caches it.
+`local` is a directory. `git` is your team's shared roster, shallow-cloned on
+`sources sync`. `mcp` is anywhere your agent can reach with tools — a Notion
+database, a wiki, an internal service.
+
+The CLI has **no MCP client and does not pretend to have one.** For `mcp`
+sources, `resolve` is an instruction your *agent* follows at runtime, after which
+it normalizes what it found into the persona schema and caches it as a plain file
+so sub-agents can read it like any other. If the server isn't connected, it says
+so by name instead of inventing a persona to fill the gap.
 
 ```bash
 npx persona-council sources add --type mcp --id notion --server notion
 ```
 
-Then edit the generated `resolve` instruction so it names your actual database.
+---
 
-## CLI
+## Two front doors
 
-```
-npx persona-council init          Install skills, commands, agents, references
-npx persona-council list          List personas across all configured sources
-npx persona-council new <id>      Scaffold a persona file to fill in
-npx persona-council doctor        Validate config, install and persona quality
-npx persona-council sources ...   list | add | sync
-npx persona-council uninstall     Remove installed files; keeps your personas
-```
-
-Flags: `--dir`, `--global`, `--target`, `--force`, `--json`.
-
-## What this does not guarantee
-
-A sub-agent starts with an empty context, so isolation from your conversation
-is real. Neutrality is not automatic: the only channel into that clean context
-is the payload the orchestrating agent writes, so the skills spend real effort
-constraining it (verbatim question, artifact, facts only — no framing, no
-adjectives, no hint of the hoped-for answer). Treat that as discipline enforced
-by instructions, not as a sandbox.
-
-Personas are also the same base model underneath. They decorrelate opinions;
-they do not create independent knowledge. A panel is a tool for surfacing
-considerations you had not weighed, not a source of new facts.
-
-## Development
+**npm** — writes into `.claude/`, works with any agent that reads it:
 
 ```bash
-npm test        # node:test, no dependencies
+npx persona-council init                     # this project
+npx persona-council init --global            # ~/.claude
+npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md instead
 ```
 
-The package has zero runtime dependencies.
+**Claude Code plugin** — the same repo is its own marketplace:
 
-## License
+```
+/plugin marketplace add tabreu8/persona-council
+/plugin install persona-council@persona-council
+```
 
-MIT
+Re-running `init` never clobbers a file you've edited unless you pass `--force`.
+
+```
+persona-council init          Install skills, commands, agents, references
+persona-council list          Every persona across every configured source
+persona-council new <id>      Scaffold one to fill in
+persona-council doctor        Config, install, and which personas are too soft
+persona-council sources ...   list | add | sync
+persona-council uninstall     Removes what it installed; keeps what you wrote
+```
+
+---
+
+## What this does *not* give you
+
+Worth saying plainly, because most tools in this space imply otherwise.
+
+**Isolation is real. Neutrality is discipline.** A sub-agent genuinely starts
+with an empty context — no history, no prior reasoning, nothing. But the one
+channel into that clean context is the payload the orchestrating agent writes,
+so the skills spend real effort constraining it: verbatim question, the artifact,
+facts only. That's instructions doing the work, not a sandbox. The orchestrator
+is the leak, and it's told so in as many words.
+
+**Personas decorrelate opinions. They don't create knowledge.** Marta Okafor is
+not an SRE. She's a lens that makes the model surface reliability considerations
+it had deprioritized. A panel is a tool for finding what you failed to weigh —
+not a source of facts nobody in the room has.
+
+**It costs real tokens.** A five-seat roundtable is fifteen-plus sub-agent runs.
+Every panel announces its roster, mode and spawn count *before* dispatching, so
+you can say "just two of them."
+
+---
+
+## Under the hood
+
+Zero runtime dependencies. 27 tests, `node --test`, no framework.
+
+Personas are **data, not sub-agents** — a deliberate departure from the obvious
+design. Writing them into `.claude/agents/` would make Claude Code auto-delegate
+to them on unrelated work, so a "skeptical VC" starts reviewing your CSS. Instead
+they live in their own directory in a portable format, and the skills inject them
+into generic runners. Your agent namespace stays clean; your personas stay usable
+outside Claude Code.
+
+```
+skills/       persona-create · persona-think · persona-ask · persona-panel
+agents/       persona-runner (read-only) · persona-chairman
+reference/    the shared docs the skills actually cite at runtime
+src/ bin/     the installer and persona resolver
+```
+
+`reference/independence.md` is the most opinionated file in the repo. Read that
+one if you only read one.
+
+---
+
+MIT. Issues and sharper personas both welcome.
