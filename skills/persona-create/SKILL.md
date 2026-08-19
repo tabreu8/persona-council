@@ -71,6 +71,24 @@ If the user's request already answers most of these ("a skeptical seed-stage VC
 who has been burned by pre-revenue AI companies"), draft first and ask them to
 correct it. A concrete draft to react to beats an interview.
 
+**Consider a custom field.** The schema has no fixed slot for what makes this
+particular persona distinct - their authority level, how they use social media,
+a like or dislike that shapes judgment. Any frontmatter key outside the fixed
+schema is preserved and handed to the sub-agent along with everything else; see
+`.claude/persona-council/persona-schema.md`. Don't ask about this by rote -
+add one only when it would change a sentence the persona writes:
+
+- `authority_level: "can block a launch alone, cannot approve budget"` changes
+  what a persona is willing to say no to unilaterally.
+- `social_media: "reads industry Twitter daily, never posts"` changes what
+  evidence they'd cite and what they'd have already seen.
+- `escalation_habit: "pages the lead directly instead of filing a ticket"`
+  changes how they'd actually behave under pressure, not just what they'd say.
+
+`favorite_color: blue` is decoration and does not belong. If nothing about this
+persona needs a custom field, skip it - the fixed schema is the default for a
+reason, and an empty custom field is worse than none.
+
 ### 4. Write the file
 
 Follow `.claude/persona-council/persona-schema.md` exactly. Non-negotiables:

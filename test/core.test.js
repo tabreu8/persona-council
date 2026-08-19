@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseFrontmatter, stringifyFrontmatter } from '../src/frontmatter.js';
-import { parsePersona, validatePersona, serializePersona, slugify } from '../src/persona.js';
+import { parsePersona, validatePersona, serializePersona, slugify, customFields } from '../src/persona.js';
 import { defaultConfig, validateConfig, mergeConfig, mcpSourceTemplate } from '../src/config.js';
 
 const GOOD_PERSONA = `---
@@ -146,4 +146,109 @@ TODO: write the system prompt in the second person, at some length.
   const result = validatePersona(parsePersona(stub));
   assert.ok(result.warnings.some((w) => w.includes('unfilled template placeholders')));
   assert.ok(result.warnings.some((w) => w.includes('body')));
+});
+
+test('customFields returns only keys outside the fixed schema', () => {
+  const persona = parsePersona(`---
+id: sre-oncall
+name: Marta
+role: Staff SRE
+likes: ["reversible changes"]
+authority_level: "can block a launch alone"
+---
+
+${'x'.repeat(60)}`);
+  assert.deepEqual(customFields(persona), {
+    likes: ['reversible changes'],
+    authority_level: 'can block a launch alone',
+  });
+});
+
+test('customFields excludes reserved bookkeeping keys attached by the loaders', () => {
+  const loaded = { id: 'x', name: 'A', role: 'B', body: 'text', hasFrontmatter: true,
+    file: '/some/path.md', source: 'local', likes: ['pizza'] };
+  assert.deepEqual(customFields(loaded), { likes: ['pizza'] });
+});
+
+test('a persona with custom fields validates clean and the fields round-trip through serialize', () => {
+  const raw = `---
+id: sre-oncall
+name: Marta Okafor
+role: Staff SRE
+stake: "You carry the pager."
+mandate: "Refuse anything with no rollback."
+lens: ["What breaks"]
+biases: ["Distrusts unreviewed changes"]
+blind_spots: ["Undervalues speed"]
+likes: ["small diffs"]
+authority_level: "can block a launch alone"
+---
+
+${'x'.repeat(60)}`;
+  const persona = parsePersona(raw);
+  const result = validatePersona(persona);
+  assert.equal(result.ok, true, result.errors.join('; '));
+  assert.deepEqual(result.warnings, []);
+  assert.deepEqual(customFields(persona), { likes: ['small diffs'], authority_level: 'can block a launch alone' });
+
+  const reparsed = parsePersona(serializePersona(persona));
+  assert.deepEqual(customFields(reparsed), customFields(persona));
+});
+
+test('doctor-facing warning flags a custom field that looks like a typo of a standard one', () => {
+  const persona = parsePersona(`---
+id: x
+name: A
+role: B
+stake: "s"
+mandate: "m"
+lens: ["l"]
+biases: ["b"]
+blind_spots: ["bs"]
+biasses: ["typo of biases"]
+---
+
+${'x'.repeat(60)}`);
+  const result = validatePersona(persona);
+  assert.ok(result.warnings.some((w) => w.includes('"biasses"') && w.includes('"biases"')));
+});
+
+test('legitimate custom fields never get flagged as typos', () => {
+  const persona = parsePersona(`---
+id: x
+name: A
+role: B
+stake: "s"
+mandate: "m"
+lens: ["l"]
+biases: ["b"]
+blind_spots: ["bs"]
+likes: ["a"]
+dislikes: ["b"]
+authority_level: "can block a launch alone"
+social_media: "reads industry twitter"
+escalation_habit: "pages the lead directly"
+---
+
+${'x'.repeat(60)}`);
+  const result = validatePersona(persona);
+  assert.deepEqual(result.warnings, []);
+});
+
+test('short custom field keys are exempt from typo detection', () => {
+  const persona = parsePersona(`---
+id: x
+name: A
+role: B
+stake: "s"
+mandate: "m"
+lens: ["l"]
+biases: ["b"]
+blind_spots: ["bs"]
+im: "informal nickname"
+---
+
+${'x'.repeat(60)}`);
+  assert.deepEqual(customFields(persona), { im: 'informal nickname' });
+  assert.deepEqual(validatePersona(persona).warnings, []);
 });

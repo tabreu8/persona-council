@@ -19,6 +19,13 @@ directives:
 refuses:
   - "TODO: what is out of scope for them, so they say so instead of bluffing"
 voice: "TODO: a few words on register, e.g. terse and numbers-first"
+# Optional: custom fields aren't part of the fixed schema, and that's the
+# point -- add one only if it would change a sentence this persona writes.
+# See persona-schema.md for the full case for and against. Examples:
+# authority_level: "can block a launch alone, cannot approve budget"
+# social_media: "reads industry Twitter daily, never posts"
+# likes: ["shipping small, reversible changes"]
+# dislikes: ["roadmaps with no date"]
 ---
 
 ## Perspective

@@ -155,6 +155,26 @@ which were invented over coffee, and those deserve very different trust.
 Quotes are never fabricated. A made-up quote gets believed precisely because it
 looks specific.
 
+### Custom fields — nothing is standard by design
+
+The fixed schema (`stake`, `mandate`, `lens`, `biases`...) covers what almost
+every persona needs. It cannot cover what makes *this one* distinct — that was
+never going to be a fixed list's job. Add any field you want:
+
+```yaml
+likes: ["shipping small, reversible changes", "a rep who says the price out loud"]
+dislikes: ["roadmaps with no date", "'let's take this offline'"]
+social_media: "Reads industry Twitter daily, never posts. Screenshots bad takes into the team channel."
+authority_level: "Can block a launch alone. Cannot approve budget without the VP."
+```
+
+It round-trips like any other field, shows up in `list` (`+2 custom`), and
+`doctor` nudges you if one looks like a typo of a standard field rather than a
+deliberate custom one. Same bar as everywhere else in this schema:
+`favorite_snack: chips` is decoration and gets ignored the moment it matters;
+`authority_level: can block a launch alone` changes what the persona will say
+no to on its own, and a chairman weighing verdicts should know it.
+
 ---
 
 ## Five tools, one door
@@ -431,7 +451,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 66 tests, `node --test`, no framework — including a
+Zero runtime dependencies. 72 tests, `node --test`, no framework — including a
 guard that every field the docs tell an agent to record actually reaches the
 memo, because "recorded and silently dropped" has been the most common bug here.
 

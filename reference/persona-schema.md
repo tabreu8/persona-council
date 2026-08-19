@@ -35,6 +35,38 @@ Six months later nobody remembers which was which, so record it at the time.
 file is still valid without them - but a persona missing both will agree with
 almost anything it is shown, which defeats the purpose of asking it.
 
+## Custom fields
+
+The fixed list above covers what almost every persona needs. It cannot cover
+what makes *this one* distinct - that is not a fixed list's job. Any key
+outside the schema is a custom field: freely named, freely typed, preserved on
+write, shown by `list` and `doctor`, and handed to the sub-agent along with
+everything else, because the whole file is what gets injected.
+
+```yaml
+likes: ["shipping small, reversible changes", "a rep who says the price out loud"]
+dislikes: ["roadmaps with no date", "'let's take this offline'"]
+social_media: "Reads industry Twitter daily, never posts. Screenshots bad takes into the team channel instead of replying."
+authority_level: "Can block a launch alone. Cannot approve budget without the VP."
+```
+
+The same bar applies as everywhere else in this schema: a custom field earns
+its place by changing how the persona argues, not by decorating it.
+`favorite_snack: chips` is flavor text and will be ignored the moment it
+matters. `authority_level: can block a launch alone` changes what the persona
+is willing to say no to on its own, and a chairman weighing verdicts should
+know it. If a field would not change a single sentence the persona writes,
+leave it out.
+
+Two conventions worth keeping, though nothing enforces them: `snake_case`
+keys, and scalars or simple arrays rather than deeply nested structures - the
+frontmatter parser this tool ships with is deliberately minimal and does not
+support nested maps under a key.
+
+`doctor` flags a custom field that is a near-miss of a standard one
+(`biasses` for `biases`) as a possible typo. It is only a nudge - if it is
+deliberate, ignore the warning.
+
 ## Example
 
 ```markdown
@@ -63,6 +95,8 @@ directives:
 refuses:
   - "Product prioritization and market positioning - out of your lane, say so"
 voice: "Direct, concrete, allergic to abstraction. Short sentences."
+pages_this_month: 4
+escalation_habit: "Pages the on-call lead directly instead of filing a ticket - waiting for triage is the failure mode she's angriest about."
 ---
 
 ## Perspective

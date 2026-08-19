@@ -13,7 +13,7 @@ import { listCases, loadCase, scoreResponse, compare } from '../src/eval.js';
 import { listPersonas, auditPersonas, syncGitSource, writeTarget, sourceDir } from '../src/sources.js';
 import { install, uninstall, readManifest, readPackageVersion, personaDir } from '../src/install.js';
 import { scaffoldPersona } from '../src/template.js';
-import { slugify } from '../src/persona.js';
+import { slugify, customFields } from '../src/persona.js';
 
 const COLORS = process.stdout.isTTY && !process.env.NO_COLOR;
 const paint = (code) => (s) => (COLORS ? `\x1b[${code}m${s}\x1b[0m` : String(s));
@@ -139,7 +139,9 @@ function cmdList(values) {
     const width = Math.max(...personas.map((p) => p.id.length));
     for (const persona of personas) {
       const role = persona.role ? c.dim(` - ${persona.role}`) : '';
-      console.log(`  ${c.bold(persona.id.padEnd(width))}  ${persona.name || ''}${role} ${c.dim(`[${persona.source}]`)}`);
+      const customCount = Object.keys(customFields(persona)).length;
+      const custom = customCount ? c.dim(` +${customCount} custom`) : '';
+      console.log(`  ${c.bold(persona.id.padEnd(width))}  ${persona.name || ''}${role}${custom} ${c.dim(`[${persona.source}]`)}`);
     }
     console.log(c.dim(`\n  ${personas.length} persona(s)`));
   }
