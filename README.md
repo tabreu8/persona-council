@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/tabreu8/persona-council/main/assets/banner.jpeg" alt="Persona Council — five personas (data, ideas, feedback, design, community) contributing to a shared council table" width="720">
+</p>
+
 <h1 align="center">persona-council</h1>
 
 <p align="center">
