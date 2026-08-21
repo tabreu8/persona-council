@@ -10,7 +10,9 @@
 </p>
 
 <p align="center">
-  <code>npx persona-council init</code>
+  <code>/plugin marketplace add tabreu8/persona-council</code> — Claude Code<br>
+  <code>npx persona-council init</code> — any project, full CLI<br>
+  <code>npx skills add tabreu8/persona-council</code> — Cursor, Cline, others
 </p>
 
 ---
@@ -344,7 +346,16 @@ no roster of yours has ever caught is the most valuable thing in that directory.
 
 ## Install
 
-**npm** — writes into `.claude/`:
+**Claude Code plugin** — the native path, the same repo is its own marketplace:
+
+```
+/plugin marketplace add tabreu8/persona-council
+/plugin install persona-council@persona-council
+```
+
+**npm** — for other projects, scripting, CI, or the full CLI (`doctor`,
+`calibration`, `memo`, `eval score`) outside a plugin context. Writes into
+`.claude/`:
 
 ```bash
 npx persona-council init                     # this project
@@ -352,12 +363,7 @@ npx persona-council init --global            # ~/.claude
 npx persona-council init --target generic    # one portable PERSONA-COUNCIL.md
 ```
 
-**Claude Code plugin** — the same repo is its own marketplace:
-
-```
-/plugin marketplace add tabreu8/persona-council
-/plugin install persona-council@persona-council
-```
+Re-running `init` never clobbers a file you've edited unless you pass `--force`.
 
 **Any Agent Skills-compatible agent** — Cursor, Cline, and others besides Claude
 Code, via [Vercel's open standard](https://github.com/vercel-labs/skills):
@@ -370,10 +376,8 @@ Installs just the six skills — no CLI, no memory journal, no `doctor`. Each on
 carries its own `references/` copy of the docs it cites (derived from the same
 source the other two installs share, kept in sync by a test — see
 `scripts/sync-skill-references.mjs`), so it works standalone with nothing else
-from this repo. Reach for the npm or plugin install first if you want the full
+from this repo. Reach for the plugin or npm install first if you want the full
 command surface; this one exists for agents that only speak the Skills standard.
-
-Re-running `init` never clobbers a file you've edited unless you pass `--force`.
 
 ```
 init          Install skills, commands, agents, references
