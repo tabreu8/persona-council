@@ -34,10 +34,26 @@ function referenceFiles() {
   return fs.readdirSync(referenceDir).filter((f) => f.endsWith('.md'));
 }
 
-/** A reference file is "cited" if its bare filename appears anywhere in the skill's prose. */
-function citedReferences(skillMdPath, candidates) {
-  const text = fs.readFileSync(skillMdPath, 'utf8');
-  return candidates.filter((name) => text.includes(name));
+/**
+ * A reference file is "cited" if its bare filename appears anywhere in the
+ * skill's prose -- or in the prose of a reference the skill cites, followed
+ * all the way down. dispatch.md exists so three skills can share one procedure,
+ * and that procedure points at briefing.md, memory.md and the rest; a skill
+ * installed in isolation needs those too, or it cites a doc that cites a doc
+ * it doesn't have.
+ */
+export function citedReferences(skillMdPath, candidates, dir = referenceDir) {
+  const found = new Set();
+  const queue = [fs.readFileSync(skillMdPath, 'utf8')];
+  while (queue.length) {
+    const text = queue.pop();
+    for (const name of candidates) {
+      if (found.has(name) || !text.includes(name)) continue;
+      found.add(name);
+      queue.push(fs.readFileSync(path.join(dir, name), 'utf8'));
+    }
+  }
+  return candidates.filter((name) => found.has(name));
 }
 
 function main() {
@@ -99,4 +115,4 @@ function main() {
   }
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

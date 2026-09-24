@@ -207,6 +207,8 @@ function buildGenericGuide() {
     '`.claude/persona-council/`. Read the one a section names before following it.\n',
   ];
   const skillsDir = path.join(packageRoot, 'skills');
+  const referenceDir = path.join(packageRoot, 'reference');
+  const referenceNames = fs.existsSync(referenceDir) ? fs.readdirSync(referenceDir) : [];
   if (fs.existsSync(skillsDir)) {
     for (const name of fs.readdirSync(skillsDir).sort()) {
       const file = path.join(skillsDir, name, 'SKILL.md');
@@ -215,7 +217,12 @@ function buildGenericGuide() {
       // Demote the skill's own headings so they nest under its name instead of
       // sitting beside it, which flattens the manual into one long list.
       const nested = body.trim().replace(/^(#{1,5}) /gm, '#$1 ').replace(/^## persona-[a-z]+\n|^## council\n/m, '');
-      parts.push(`\n---\n\n## ${name}\n\n${nested}\n`);
+      // Skills cite shared docs by bare name. In the manual there is exactly one
+      // place those live, so spell it out rather than leave the reader to guess.
+      const located = nested.replace(/(?<![\w./-])`([a-z-]+\.md)`/g, (match, name) => (
+        referenceNames.includes(name) ? `\`.claude/persona-council/${name}\`` : match
+      ));
+      parts.push(`\n---\n\n## ${name}\n\n${located}\n`);
     }
   }
   return `${parts.join('\n')}\n`;

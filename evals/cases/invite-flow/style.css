@@ -1,0 +1,13 @@
+/* Deliberately plain: this is a test fixture, not a design. */
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: #1d1d1f; background: #f6f6f7; }
+header { display: flex; gap: 1.2rem; align-items: center; padding: .8rem 1.4rem; background: #fff; border-bottom: 1px solid #ddd; }
+header strong { margin-right: 1rem; }
+header a { color: #333; text-decoration: none; }
+main { max-width: 44rem; margin: 2rem auto; padding: 0 1rem; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+button, .button { font: inherit; padding: .45rem .9rem; border-radius: 6px; border: 1px solid #999; background: #fff; cursor: pointer; }
+.primary { background: #3558e8; color: #fff; border-color: #3558e8; }
+label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
+input, select { font: inherit; padding: .4rem; width: 100%; box-sizing: border-box; }
+.muted { color: #777; font-size: .9rem; }
+dialog { border: 1px solid #aaa; border-radius: 8px; max-width: 26rem; }

@@ -12,110 +12,93 @@ description: Have one or more saved personas actually use a product - a web app,
 > `npx skills add` or any other Agent Skills-compatible installer).
 
 A persona stops giving opinions and starts doing things. It gets a goal and the
-real product, and works toward the goal the way that person would, logging what
-it did, what it saw, what it expected and what it thought at every step. Then
-you, the orchestrator, audit the journey.
+real product, works toward the goal the way that person would, and logs what it
+did, expected, saw and thought at every step. Then you audit the journey.
 
 Two roles, kept apart on purpose:
 
-- **The walker** is the persona. It runs in a sub-agent that has never seen this
-  conversation, acts through real tools, and does not know it is being studied.
-- **The auditor** is you. You have seen the product from the outside, you can
-  reopen any screen the walker describes, and you judge the journey. A walker
-  that audits itself rationalises its own wrong turns.
+- **The walker** is the persona, in a sub-agent that has never seen this
+  conversation. It acts through real tools and does not know it is being studied.
+- **The auditor** is you. You have seen the product from the outside and can
+  reopen any screen the walker describes. A walker that audits itself
+  rationalises its own wrong turns.
 
-Read `journey-contract.md` before dispatching. It holds the mission rules, the
-walk log contract, the audit, and the record shape.
+Follow `dispatch.md` for resolving, confirming, keeping and presenting.
+`journey-contract.md` holds the mission rules, the walk log, the audit and the
+record shape - read it before dispatching. What is specific to a walkthrough:
 
-## Procedure
+## 1. Pick the walkers
 
-### 1. Resolve the personas
+If a roster is named and has `framing: walkthrough`, it carries the walkers and
+often the goal (`goal`) and entry point (`at`) too - `npx persona-council
+roster list` shows them. Otherwise, if no persona is named, propose one or two
+whose traits most plausibly change the journey - the first-timer against the
+power user, the time-poor buyer against the careful admin - and say why.
 
-Per `resolving-personas.md`. On a miss, list what exists and offer
-`persona-create`. Do not improvise a walker - a generic "user" walks the happy
-path and finds nothing.
+A generic "user" walks the happy path and finds nothing. Do not improvise one.
 
-If no persona is named, propose one or two whose traits most plausibly change
-the journey: the first-timer against the power user, the time-poor buyer
-against the careful admin. Say why each.
+## 2. Establish what can actually be driven
 
-### 2. Establish what can actually be driven
-
-Check what action tools this session really has before promising anything:
+Check which action tools this session really has before promising anything:
 
 | Product | Drive it with |
 |---|---|
-| web app or site | a browser tool (Playwright, a browser MCP), or fetching pages if nothing else |
+| web app or site | a browser tool (Playwright, a browser MCP); fetching pages if nothing else |
 | CLI or install flow | a shell, in a throwaway directory |
 | API or SDK | the shell, curl, or a scratch script |
 | local app in this repo | start it first (the `run` skill, if present), then one of the above |
 
-If nothing can drive it - no browser, no running instance - say so. Offer a
-**paper walkthrough** instead: the walker steps through screenshots, a design
-file or the docs in order, and every `Saw` is a static frame. Label the run as
-paper in the audit and the record; it tests comprehension, not interaction.
+If nothing can drive it, say so and offer a **paper walkthrough**: the walker
+steps through screenshots, a design file or the docs in order. Label the run as
+paper in the audit and the record - it tests comprehension, not interaction.
+Dispatch a paper walk to `persona-runner` instead of `persona-walker`: it needs
+to open the frames, and reading files is all the runner can do.
 
-### 3. Write the mission
+## 3. Write the mission
 
 Per `journey-contract.md`: the goal in the persona's words, the entry point,
 the tools, test credentials, stop points, and a step budget (default 25).
 
-The goal is the user's words, translated into the persona's situation - never a
-route. If the user said "see if people can find the export", the walker's goal
-is "you need last month's numbers in a spreadsheet for your manager", not "find
-the export button".
+The goal is never a route. "See if people can find the export" becomes "you
+need last month's numbers in a spreadsheet for your manager", not "find the
+export button". Keep out known problem areas and what the team is worried
+about - `independence.md` applies in full.
 
-Always set stop points for anything irreversible or outward-facing: payment,
-sending email or invites to real addresses, deleting data, publishing. If the
-goal needs an account, get test credentials or a sandbox from the user. Never
-use their real account unless they explicitly hand it over for this.
+Always set stop points for anything irreversible or outward-facing: paying,
+sending email or invites to real addresses, deleting data, publishing. Get test
+credentials or a sandbox if the goal needs an account; never the user's real
+account unless they hand it over for this.
 
-Keep out anything that points at the answer: known problem areas, what the team
-is worried about, what a previous walker did. `independence.md` applies in full.
+## 4. Dispatch
 
-### 4. Confirm, then dispatch
-
-State the plan in one line and wait:
+Confirm first, in one line:
 
 > first-time-admin and time-poor-buyer each try to invite a teammate, starting
 > at the marketing site, via the browser. Stops before any real invite is sent.
 > 2 walkers, 25 steps each, then I audit. Go?
 
-Spawn one `persona-walker` sub-agent per persona - **in a single message**, so
-they run concurrently and none sees another's route. Each gets:
+One `persona-walker` per persona, in a single message. The brief section of
+the prompt is the mission:
 
 ```
-You are a specific person, using a product for real. Adopt this persona completely.
-
-<full contents of the persona file, frontmatter and body>
-
----
-
-Your goal:
-<the goal, in the persona's words>
-
-Where you start:
-<entry point>
-
-How you can act:
-<the tools, named, and anything needed to use them - test credentials, sandbox>
-
+Your goal:          <the goal, in the persona's words>
+Where you start:    <entry point>
+How you can act:    <the tools, named; test credentials; sandbox>
 Stop points - go up to these, log what you would do, never cross them:
-<list>
-
-Step budget: <N> actions. Give up earlier if this person would.
-
----
-
-Log your journey using exactly this contract:
-<the walk log contract from journey-contract.md>
+                    <list>
+Step budget:        <N> actions. Give up earlier if this person would.
 ```
 
-If the harness has no `persona-walker` agent, a general-purpose sub-agent with
-the same prompt and the rules from `journey-contract.md` works. It must have the
-action tools; a read-only runner cannot walk anything.
+`persona-walker` cannot read, search or edit files, so it cannot open the
+source to get past a confusing screen - fidelity is enforced, not just asked
+for. It keeps the shell and any browser or MCP tools. The shell is not
+restricted by the agent file; for CLI walks, point it at a throwaway
+directory, and for anything sensitive restrict it with the user's own
+permission settings. If the harness has no `persona-walker`, use a
+general-purpose sub-agent with the rules from `journey-contract.md` - but it
+must have the action tools; a read-only runner cannot walk anything.
 
-### 5. Audit
+## 5. Audit
 
 Follow the audit in `journey-contract.md`, in order. The parts people skip:
 
@@ -123,18 +106,20 @@ Follow the audit in `journey-contract.md`, in order. The parts people skip:
   Mark each friction point `product`, `persona` or `fidelity`.
 - **Did they succeed, and did they think they did?** A walker confident it
   finished the wrong task is the worst finding and the easiest to miss.
-- **Check fidelity.** A walk with no wrong turns is either a great product or a
-  walker that used knowledge its persona would not have. Say which, with the
-  step that tells you.
+- **A walk with no wrong turns** is either a great product or a walker that used
+  knowledge its persona would not have, or a goal that leaked the route. Say
+  which, with the step that tells you.
 - **Nothing past the first blocker has been tested.** List what no walker
   reached.
 
-With several walkers, lead with where their journeys diverged and which persona
-trait explains it. Never average journeys into a score.
+Give every friction point a short stable `id` (`members-under-billing`) so a
+re-walk can say whether it is still there. With several walkers, lead with
+where their journeys diverged and which trait explains it. Never average
+journeys into a score.
 
-### 6. Present
+## 6. Present
 
-Lead with completion and the blockers - that is what the user came for:
+Lead with completion and the blockers:
 
 ```markdown
 **Invite a teammate** · 2 walkers · browser
@@ -152,42 +137,38 @@ Lead with completion and the blockers - that is what the user came for:
 **Expectation gaps** · **What worked** · **Nobody reached** · **Fix first**
 ```
 
-Then the persona's own voice, briefly: where it almost quit, and what it would
-tell a colleague. The full step logs belong in the memo, not the chat - offer
-them.
+Then the persona's own voice, briefly: where it almost quit and what it would
+tell a colleague. The full step logs belong in the memo; offer them.
 
-Close with one line on what this roster could not have found: the segments not
-walked, and anything past the first blocker.
-
-### 7. Persist
-
-Scratch by default, per `memory.md`. Record it as a decision only when the
+Keep the run per `dispatch.md` with `kind: "journey"` and
+`framing: "walkthrough"`, every step of every log included. Scratch unless the
 journey gates something ("we don't ship until a first-time admin can finish
-this"), so a re-walk can be compared against it.
-
-Write `kind: "journey"` and `framing: "walkthrough"`, in the record shape from
-`journey-contract.md`, with every step of every log. Get the timestamp with
-`date -u +%Y-%m-%dT%H:%M:%SZ`. Then render rather than hand-write:
-
-```bash
-npx persona-council memo <id>                          # markdown
-npx persona-council memo <id> --html --out journey.html
-```
-
-Journey runs never feed track records.
+this").
 
 ## Re-walking
 
-The natural follow-up to a fix is the same persona, the same goal, the same
-entry point. Offer it when the user says they changed something. Compare step
-count, outcome, and whether the old blocker still appears - not how the walker
-felt about it.
+After a fix, re-walk with the same persona, goal and entry point, then compare
+the two runs:
 
-## Failure handling
+```bash
+npx persona-council compare <before-id> <after-id>
+```
 
-- A walker's tools fail (browser will not launch, server down): it logs that and
-  stops. Report it as an environment failure, not a product finding.
+It reports, per walker, the outcome and step count before and after, and which
+friction ids were fixed, which remain, and which are new. Lead with that, not
+with how the walker felt about it.
+
+## Checking the walker itself
+
+`npx persona-council eval list` includes `invite-flow`: a tiny static web app
+with planted usability problems. Walk it (open its `index.html` in the browser
+tool), audit, save the audit, and score it with `eval score`. It is how you
+find out whether your walkers and your audit catch what they should - never
+show the walker or yourself the `.flaws.json` beforehand.
+
+## When a walk goes wrong
+
+- A walker's tools fail (browser will not launch, server down): report it as an
+  environment failure, not a product finding.
 - A walker crosses a stop point: stop, tell the user exactly what it did, and do
   not dispatch again until the stop points are tightened.
-- Every walker completes instantly with no wrong turns: suspect fidelity or a
-  goal that leaked the route before you report a flawless product.

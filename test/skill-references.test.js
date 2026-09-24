@@ -9,6 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const referenceDir = path.join(root, 'reference');
 const skillsDir = path.join(root, 'skills');
 const syncScript = path.join(root, 'scripts', 'sync-skill-references.mjs');
+const { citedReferences } = await import('../scripts/sync-skill-references.mjs');
 
 /**
  * Third install path: the Agent Skills open standard (`npx skills add
@@ -50,15 +51,14 @@ test('every skill/references file is byte-identical to its reference/ source', (
   assert.ok(checked > 15, 'expected a substantial number of derived reference files to exist and be checked');
 });
 
-test('every reference file a skill cites in its prose is present in its own references/ folder', () => {
+test('every reference file a skill cites, directly or through another reference, is in its own references/ folder', () => {
   const referenceFiles = fs.readdirSync(referenceDir).filter((f) => f.endsWith('.md'));
   const skills = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory());
 
   for (const skill of skills) {
     const skillMdPath = path.join(skillsDir, skill.name, 'SKILL.md');
     if (!fs.existsSync(skillMdPath)) continue;
-    const text = fs.readFileSync(skillMdPath, 'utf8');
-    const cited = referenceFiles.filter((name) => text.includes(name));
+    const cited = citedReferences(skillMdPath, referenceFiles);
     if (cited.length === 0) continue;
 
     const refsDir = path.join(skillsDir, skill.name, 'references');
@@ -83,5 +83,14 @@ test('every skill has the three-way fallback note naming all three install paths
     assert.match(text, /persona-council\/<file>/, `${skill.name} should name the npm install path`);
     assert.match(text, /CLAUDE_PLUGIN_ROOT/, `${skill.name} should name the plugin install path`);
     assert.match(text, /references\/<file>/, `${skill.name} should name the skill-local path (npx skills add)`);
+  }
+});
+
+test('references are followed transitively, so a skill citing dispatch.md also gets what dispatch.md cites', () => {
+  const referenceFiles = fs.readdirSync(referenceDir).filter((f) => f.endsWith('.md'));
+  const cited = citedReferences(path.join(skillsDir, 'persona-ask', 'SKILL.md'), referenceFiles);
+  assert.ok(cited.includes('dispatch.md'));
+  for (const name of ['briefing.md', 'independence.md', 'memory.md', 'resolving-personas.md']) {
+    assert.ok(cited.includes(name), `persona-ask reaches ${name} through dispatch.md`);
   }
 });

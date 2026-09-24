@@ -18,8 +18,6 @@ it names the exact screen to fix.
 |---|---|---|
 | `journey` | pursue a goal in the real product, logging every step | **walk log**, below |
 
-Journey runs never feed track records. Getting lost is not a prediction that
-can be right or wrong.
 
 ---
 
@@ -136,8 +134,11 @@ quality, grounded in specific steps.
    the shortest path you can find? Did they *believe* they succeeded - and were
    they right? A persona that thinks it exported the report but exported the
    wrong one is the worst outcome in the table and the easiest to miss.
-3. **Friction, ranked.** Each point: the step, what happened, severity, the
-   evidence (the quoted `Saw`), and the smallest fix.
+3. **Friction, ranked.** Each point: a short stable `id`
+   (`members-under-billing`), the step, what happened, severity, the evidence
+   (the quoted `Saw`), and the smallest fix. The id is what lets a re-walk say
+   whether the problem is still there, so reuse it when the same problem shows
+   up again.
 
    | Severity | Means |
    |---|---|
@@ -197,7 +198,7 @@ can finish it" - so that a later re-walk can be compared against it.
     "summary": "...",
     "completion": "...",
     "friction": [
-      { "persona": "first-time-admin", "step": 4, "issue": "...",
+      { "id": "members-under-billing", "persona": "first-time-admin", "step": 4, "issue": "...",
         "severity": "blocker", "cause": "product", "evidence": "...", "fix": "..." }
     ],
     "expectationGaps": ["..."],
@@ -210,4 +211,6 @@ can finish it" - so that a later re-walk can be compared against it.
 }
 ```
 
-Render it like any other run: `npx persona-council memo <id> --html`.
+Render it like any other run: `npx persona-council memo <id> --html`. After a
+fix, `npx persona-council compare <before> <after>` shows which friction ids
+went away, which remain, and which are new.

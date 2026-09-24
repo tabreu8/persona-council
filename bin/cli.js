@@ -5,11 +5,13 @@ import os from 'node:os';
 import { parseArgs } from 'node:util';
 import { loadConfig, saveConfig, validateConfig, mcpSourceTemplate, defaultConfig } from '../src/config.js';
 import {
-  listDecisions, readDecision, listScratch, pruneScratch, promoteScratch,
-  calibration, memoryStats,
+  listDecisions, readDecision, pruneScratch, promoteScratch, memoryStats, findRun,
 } from '../src/memory.js';
 import { renderMemoMarkdown, renderMemoHtml } from '../src/render.js';
-import { listCases, loadCase, scoreResponse, compare } from '../src/eval.js';
+import { compareJourneys } from '../src/compare.js';
+import {
+  listCases, loadCase, scoreResponse, compare, rubric, scoreJudged, disagreements,
+} from '../src/eval.js';
 import { listPersonas, auditPersonas, syncGitSource, writeTarget, sourceDir } from '../src/sources.js';
 import { install, uninstall, readManifest, readPackageVersion, personaDir } from '../src/install.js';
 import { scaffoldPersona } from '../src/template.js';
@@ -41,12 +43,13 @@ ${c.bold('Commands')}
   sources add          Add a source (--type local|git|mcp)
   sources sync         Refresh cached git sources
   roster list|add      Named rosters, so "run it past launch-review" is one word
-  decisions list       Decisions on record, and which still await a retro
-  decisions show <id>  One decision, its verdicts and its outcome
+  decisions list       Decisions on record
+  decisions show <id>  One decision and its verdicts
   memo <id>            Re-render a decision as markdown or a rich HTML page
-  calibration          Persona track records, from decisions that have outcomes
+  compare <a> <b>      Before and after for a re-walk: outcomes, steps, friction
   prune                Drop stale scratch runs (decisions are never touched)
-  eval list|score      Score a panel against artifacts with known planted flaws
+  eval list|rubric|score
+                       Score a panel or walkthrough against known planted flaws
   uninstall            Remove installed files (personas and memory are kept)
 
 ${c.bold('Options')}
@@ -64,7 +67,6 @@ ${c.bold('Examples')}
   npx persona-council sources add --type mcp --id notion --server notion
   npx persona-council roster add pricing-council --personas="sales-lead,finance-lead"
   npx persona-council memo 2026-08-19-usage-pricing --html --out memo.html
-  npx persona-council calibration
 `;
 
 function resolveRoot(values) {
@@ -112,9 +114,9 @@ function cmdInit(values) {
   console.log(`     ${c.cyan('/persona-create')}  ${c.dim('or')}  ${c.cyan('npx persona-council new vc-skeptic')}`);
   console.log(`  2. Personas live in ${c.cyan(dir)}. Point elsewhere with ${c.cyan('persona-council sources add')}.`);
   console.log(`  3. In your agent, ${c.cyan('/council')} routes to the right thing. Or name it:`);
-  console.log(`     ${c.cyan('/persona-ask')} ${c.dim('·')} ${c.cyan('/persona-think')} ${c.dim('·')} ${c.cyan('/persona-panel')} ${c.dim('·')} ${c.cyan('/persona-retro')}`);
+  console.log(`     ${c.cyan('/persona-ask')} ${c.dim('·')} ${c.cyan('/persona-think')} ${c.dim('·')} ${c.cyan('/persona-panel')} ${c.dim('·')} ${c.cyan('/persona-walkthrough')}`);
   console.log(`\n  ${c.dim('Runs are scratch by default and evaporate. Say when you are actually')}`);
-  console.log(`  ${c.dim('deciding — that is what puts one on record and lets it earn a retro.')}`);
+  console.log(`  ${c.dim('deciding — that is what puts one on record for the team to read back.')}`);
 }
 
 function cmdList(values) {
@@ -224,14 +226,10 @@ function cmdDoctor(values) {
   console.log(`\n${c.bold('memory')}`);
   const stats = memoryStats(root, config);
   console.log(`  ${c.dim('-')} ${stats.scratch} scratch run(s), pruned automatically`);
-  console.log(`  ${c.dim('-')} ${stats.decisions} decision(s) on record, ${stats.withOutcome} with an outcome`);
-  if (stats.awaitingRetro.length > 0) {
-    console.log(`  ${c.yellow('!')} ${stats.awaitingRetro.length} decision(s) awaiting a retro - track records stay blunt until they land`);
-  }
+  console.log(`  ${c.dim('-')} ${stats.decisions} decision(s) on record`);
 
   console.log(`\n${c.bold('personas')}`);
   const { report } = auditPersonas(root, config);
-  const tracks = new Map(calibration(root, config).map((row) => [row.persona, row]));
   if (report.length === 0) {
     console.log(`  ${c.yellow('!')} none yet - ${c.cyan('persona-council new <id>')}`);
   }
@@ -246,7 +244,6 @@ function cmdDoctor(values) {
     } else {
       console.log(`  ${c.green('ok')} ${entry.id}`);
     }
-    for (const flag of tracks.get(entry.id)?.flags || []) console.log(`      ${c.yellow(flag)}`);
   }
 
   console.log(problems === 0 ? `\n${c.green('No blocking problems.')}` : `\n${c.red(`${problems} problem(s) need attention.`)}`);
@@ -359,6 +356,8 @@ function cmdRoster(positionals, values) {
       const roster = rosters[name];
       console.log(`  ${c.bold(name)} ${c.dim(`(${roster.mode || 'fanout'}${roster.framing ? `/${roster.framing}` : ''})`)}`);
       console.log(`      ${roster.personas.join(', ')}`);
+      if (roster.goal) console.log(`      ${c.dim('goal:')} ${roster.goal}`);
+      if (roster.at) console.log(`      ${c.dim('start:')} ${roster.at}`);
       if (roster.description) console.log(`      ${c.dim(roster.description)}`);
     }
     return;
@@ -369,6 +368,7 @@ function cmdRoster(positionals, values) {
     const personas = String(values.personas || '').split(',').map((p) => p.trim()).filter(Boolean);
     if (!name || personas.length === 0) {
       console.error(c.red('usage: persona-council roster add <name> --personas="a,b,c" [--mode fanout] [--framing gate]'));
+      console.error(c.dim('       walkers: --framing walkthrough [--goal "..."] [--at <url|command>]'));
       process.exitCode = 1;
       return;
     }
@@ -377,6 +377,8 @@ function cmdRoster(positionals, values) {
       personas,
       mode: values.mode || undefined,
       framing: values.framing || undefined,
+      goal: values.goal || undefined,
+      at: values.at || undefined,
       description: values.description || undefined,
     } };
     const errors = validateConfig(next);
@@ -430,12 +432,10 @@ function cmdDecisions(positionals, values) {
       return;
     }
     for (const decision of decisions) {
-      const mark = decision.outcome ? c.green('closed') : c.yellow('open  ');
-      console.log(`  ${mark} ${c.bold(decision.id)}`);
-      console.log(`         ${c.dim((decision.synthesis?.decision || decision.question || '').slice(0, 76))}`);
+      console.log(`  ${c.bold(decision.id)} ${c.dim(`(${decision.kind || 'evaluative'})`)}`);
+      console.log(`      ${c.dim((decision.synthesis?.decision || decision.synthesis?.summary || decision.question || '').slice(0, 76))}`);
     }
-    const open = decisions.filter((d) => !d.outcome).length;
-    console.log(c.dim(`\n  ${decisions.length} decision(s), ${open} awaiting a retro`));
+    console.log(c.dim(`\n  ${decisions.length} decision(s) on record`));
     return;
   }
 
@@ -464,11 +464,7 @@ function cmdMemo(positionals, values) {
     return;
   }
 
-  let record = readDecision(root, config, id);
-  if (!record) {
-    const scratch = listScratch(root, config).find((run) => run.id === id);
-    record = scratch?.record ? { ...scratch.record, mode: 'scratch' } : null;
-  }
+  const record = findRun(root, config, id);
   if (!record) {
     console.error(c.red(`no decision or scratch run "${id}"`));
     process.exitCode = 1;
@@ -482,29 +478,46 @@ function cmdMemo(positionals, values) {
   console.log(`${c.green('+')} ${values.out}`);
 }
 
-function cmdCalibration(values) {
+function cmdCompare(positionals, values) {
   const root = resolveRoot(values);
   const { config } = loadConfig(root);
-  const rows = calibration(root, config);
-  if (values.json) return void console.log(JSON.stringify(rows, null, 2));
-
-  const stats = memoryStats(root, config);
-  if (rows.length === 0) {
-    console.log(c.dim('  no decisions on record yet, so no track records to compute'));
-    console.log(c.dim('  Scratch runs deliberately do not count: a brainstorm has no outcome.'));
+  const [beforeId, afterId] = positionals.slice(1);
+  if (!beforeId || !afterId) {
+    console.error(c.red('usage: persona-council compare <before-run-id> <after-run-id>'));
+    process.exitCode = 1;
     return;
   }
+  const before = findRun(root, config, beforeId);
+  const after = findRun(root, config, afterId);
+  for (const [id, run] of [[beforeId, before], [afterId, after]]) {
+    if (!run) {
+      console.error(c.red(`no decision or scratch run "${id}"`));
+      process.exitCode = 1;
+      return;
+    }
+  }
 
-  const width = Math.max(...rows.map((r) => r.persona.length));
-  for (const row of rows) {
-    const hit = row.hitRate === null ? c.dim('  —  ') : `${String(Math.round(row.hitRate * 100)).padStart(3)}%`;
-    console.log(`  ${c.bold(row.persona.padEnd(width))}  seated ${String(row.seated).padStart(2)}  dissent ${String(Math.round(row.dissentRate * 100)).padStart(3)}%  concerns realized ${hit}`);
-    for (const flag of row.flags) console.log(`      ${c.yellow(flag)}`);
+  const result = compareJourneys(before, after);
+  if (values.json) return void console.log(JSON.stringify(result, null, 2));
+
+  console.log(`${c.bold(after.question || afterId)}`);
+  if (!result.sameGoal) {
+    console.log(c.yellow('  ! the two runs had different goals - this is not a like-for-like re-walk'));
   }
-  console.log(c.dim(`\n  ${stats.decisions} decision(s), ${stats.withOutcome} with a recorded outcome`));
-  if (stats.awaitingRetro.length) {
-    console.log(c.dim(`  Track records only sharpen once outcomes land: ${stats.awaitingRetro.length} awaiting a retro.`));
+  const walker = (w) => (w ? `${w.outcome || '—'}, ${w.steps} step${w.steps === 1 ? '' : 's'}` : c.dim('not walked'));
+  console.log(`\n${c.bold('walkers')}`);
+  for (const w of result.walkers) {
+    console.log(`  ${c.bold(w.persona)}  ${walker(w.before)}  ->  ${walker(w.after)}`);
   }
+  const line = (f) => `${f.severity || 'unrated'}${f.id ? ` ${f.id}` : ''} - ${f.issue || f}`;
+  console.log(`\n${c.bold('friction')}`);
+  for (const f of result.fixed) console.log(`  ${c.green('fixed    ')} ${line(f)}`);
+  for (const f of result.remaining) console.log(`  ${c.yellow('remaining')} ${line(f)}`);
+  for (const f of result.added) console.log(`  ${c.red('new      ')} ${line(f)}`);
+  if (!result.fixed.length && !result.remaining.length && !result.added.length) {
+    console.log(c.dim('  no friction recorded in either run'));
+  }
+  console.log(c.dim('\n  Friction is matched by id. Anything without one only matches on identical wording.'));
 }
 
 function cmdPrune(values) {
@@ -528,7 +541,7 @@ function cmdPromote(positionals, values) {
   }
   const { id } = promoteScratch(root, config, runId);
   console.log(`${c.green('+')} promoted to decision ${c.bold(id)}`);
-  console.log(c.dim('  It can now carry an outcome and feed persona track records.'));
+  console.log(c.dim('  It is now on record: kept, committed, and never pruned.'));
 }
 
 function cmdEval(positionals, values) {
@@ -538,12 +551,30 @@ function cmdEval(positionals, values) {
     const cases = listCases();
     if (values.json) return void console.log(JSON.stringify(cases, null, 2));
     for (const spec of cases) {
-      console.log(`  ${c.bold(spec.case.padEnd(16))} ${c.dim(spec.domain.padEnd(12))} ${spec.flaws.length} planted flaws`);
+      const walk = spec.kind === 'journey';
+      console.log(`  ${c.bold(spec.case.padEnd(16))} ${c.dim(spec.domain.padEnd(12))} ${spec.flaws.length} planted flaws${walk ? c.cyan('  walkthrough') : ''}`);
       console.log(`      ${c.dim(spec.description)}`);
-      console.log(`      ${c.dim(spec.artifact)}`);
+      if (walk) {
+        console.log(`      ${c.dim('goal:')} ${spec.goal}`);
+        console.log(`      ${c.dim('start:')} ${c.dim(`file://${spec.artifact}`)}`);
+        if ((spec.stopPoints || []).length) console.log(`      ${c.dim('stop at:')} ${spec.stopPoints.join('; ')}`);
+      } else {
+        console.log(`      ${c.dim(spec.artifact)}`);
+      }
     }
-    console.log(c.dim('\n  Run a panel on the artifact, save its output, then score it.'));
+    console.log(c.dim('\n  Run a panel on the artifact, or walk the product, save the output, then score it.'));
     console.log(c.dim('  Do not let the agent read the .flaws.json file - that is the answer key.'));
+    return;
+  }
+
+  if (sub === 'rubric') {
+    const spec = loadCase(values.case || positionals[2] || '');
+    if (!spec) {
+      console.error(c.red(`unknown case "${values.case || positionals[2] || ''}" - try: persona-council eval list`));
+      process.exitCode = 1;
+      return;
+    }
+    console.log(rubric(spec));
     return;
   }
 
@@ -556,7 +587,7 @@ function cmdEval(positionals, values) {
     }
     const responsePath = values.response || positionals[3];
     if (!responsePath) {
-      console.error(c.red('usage: persona-council eval score --case <name> --response <file> [--baseline <file>]'));
+      console.error(c.red('usage: persona-council eval score --case <name> --response <file> [--baseline <file>] [--judged <file>]'));
       process.exitCode = 1;
       return;
     }
@@ -567,10 +598,21 @@ function cmdEval(positionals, values) {
       : null;
     const delta = compare(score, baseline);
 
-    if (values.json) return void console.log(JSON.stringify({ score, baseline, delta }, null, 2));
+    const judged = values.judged
+      ? scoreJudged(JSON.parse(fs.readFileSync(values.judged, 'utf8')), spec)
+      : null;
+    const disputed = judged ? disagreements(score, judged) : [];
+
+    if (values.json) return void console.log(JSON.stringify({ score, baseline, delta, judged, disagreements: disputed }, null, 2));
 
     console.log(`${c.bold(spec.case)} ${c.dim(`(${spec.domain})`)}`);
-    console.log(`  caught ${c.bold(`${score.caught}/${score.total}`)} planted flaws  ${c.dim(`(weighted ${Math.round(score.weightedRecall * 100)}%)`)}`);
+    console.log(`  caught ${c.bold(`${score.caught}/${score.total}`)} planted flaws  ${c.dim(`(weighted ${Math.round(score.weightedRecall * 100)}%)`)}${judged ? c.dim('  by keyword') : ''}`);
+    if (judged) {
+      console.log(`  caught ${c.bold(`${judged.caught}/${judged.total}`)} planted flaws  ${c.dim(`(weighted ${Math.round(judged.weightedRecall * 100)}%)`)}${c.dim('  by grader')}`);
+      for (const d of disputed) {
+        console.log(c.yellow(`    ${d.id}: ${d.keyword ? 'keyword says caught, grader says not - name-drop?' : 'grader says caught, keyword missed it - different words'}`));
+      }
+    }
     if (baseline) {
       const sign = delta.recallDelta >= 0 ? '+' : '';
       const paint = delta.recallDelta >= 0 ? c.green : c.red;
@@ -579,12 +621,16 @@ function cmdEval(positionals, values) {
         console.log(c.yellow(`  the baseline caught things the panel missed: ${delta.onlyBaseline.join(', ')}`));
       }
     }
-    if (score.missed.length) {
-      console.log(`\n  ${c.yellow('missed')}`);
-      for (const miss of score.missed) console.log(`    ${miss.severity.padEnd(8)} ${miss.id} - ${miss.description}`);
+    const misses = (judged || score).missed;
+    if (misses.length) {
+      console.log(`\n  ${c.yellow('missed')}${judged ? c.dim(' (per the grader)') : ''}`);
+      for (const miss of misses) console.log(`    ${miss.severity.padEnd(8)} ${miss.id} - ${miss.description}`);
     }
-    console.log(c.dim('\n  Keyword matching over-credits name-dropping and under-credits'));
-    console.log(c.dim('  a good argument in different words. Read the misses by hand.'));
+    if (!judged) {
+      console.log(c.dim('\n  Keyword matching over-credits name-dropping and under-credits'));
+      console.log(c.dim('  a good argument in different words. For a real grade, have a fresh'));
+      console.log(c.dim(`  sub-agent follow \`persona-council eval rubric ${spec.case}\` and pass --judged.`));
+    }
     return;
   }
 
@@ -630,11 +676,14 @@ function main(argv) {
         mode: { type: 'string' },
         framing: { type: 'string' },
         description: { type: 'string' },
+        goal: { type: 'string' },
+        at: { type: 'string' },
         html: { type: 'boolean' },
         out: { type: 'string' },
         case: { type: 'string' },
         response: { type: 'string' },
         baseline: { type: 'string' },
+        judged: { type: 'string' },
         default: { type: 'boolean' },
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
@@ -662,7 +711,7 @@ function main(argv) {
       case 'rosters': return cmdRoster(positionals, values);
       case 'decisions': return cmdDecisions(positionals, values);
       case 'memo': return cmdMemo(positionals, values);
-      case 'calibration': return cmdCalibration(values);
+      case 'compare': return cmdCompare(positionals, values);
       case 'prune': return cmdPrune(values);
       case 'promote': return cmdPromote(positionals, values);
       case 'eval': return cmdEval(positionals, values);

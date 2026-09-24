@@ -19,6 +19,6 @@ note which are grounded in evidence versus invented.
 Also show saved rosters (`npx persona-council roster list`), since those are how
 a group gets convened in one word.
 
-If `--check` was passed, run `npx persona-council doctor` and
-`npx persona-council calibration`, and report both — including any persona
-flagged as never dissenting or as raising concerns that never materialize.
+If `--check` was passed, run `npx persona-council doctor` and report what it
+flags: broken files, missing stake or mandate, unfilled placeholders, and
+evidence that has gone stale.

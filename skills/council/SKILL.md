@@ -1,6 +1,6 @@
 ---
 name: council
-description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, walkthrough, retro) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, for a brainstorm from several viewpoints, for how an audience or customer would react to something, for a persona to actually use or test-drive the product and audit the user journey, or invokes /council without saying which mode they want.
+description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, walkthrough) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, or invokes /council without saying which mode they want.
 ---
 
 # council
@@ -10,94 +10,47 @@ description: Entry point for persona work — routes a request to the right pers
 > (plugin install), then `references/<file>` in this skill's own directory
 > (installed with `npx skills add` or any other Agent Skills-compatible installer).
 
-One door. Read the request, pick the capability, do not make the user learn six
-command names.
+One door. Hand the request to the skill whose description fits it -
+`persona-create`, `persona-think`, `persona-ask`, `persona-panel`,
+`persona-walkthrough` - and do not make the user learn their names. This skill
+only adds the three things no single skill can decide on its own.
 
-## Routing
+## 1. No personas yet → build one first
 
-| They said | Route to | Why |
-|---|---|---|
-| "make a persona", "define X", "build me a reviewer" | `persona-create` | authoring |
-| "what would X say", "think like X" (about live work) | `persona-think` | free, in-context |
-| "ask X", "get an unbiased read", "second opinion" | `persona-ask` | one clean verdict |
-| "the room", "panel", "council", "several views", "debate" | `persona-panel` | many seats |
-| "brainstorm", "give me ideas", "what angles", "what should we call it" | `persona-panel` (`ideate`) | generative, not a judgement |
-| "how would X react", "would this land", "what would customers think" | `persona-panel` (`react`) | reactions, not verdicts |
-| "have X try it", "can a new user actually do Y", "walk through signup as X", "audit the onboarding" | `persona-walkthrough` | behaviour in the real product, audited |
-| "it went badly", "we shipped it", "who was right" | `persona-retro` | close the loop |
-| "which personas do I have" | `persona-council list` | just answer it |
+Check with `npx persona-council list` (or the configured source directories).
+If there are none, run nothing. Say what the council needs and offer
+`persona-create`. One good persona beats an empty panel.
 
-Ambiguous cases:
-
-- **A bare artifact and "thoughts?"** → `persona-ask` with the single most
-  relevant seat, and offer the panel as the next rung up. Do not spend five
-  agents on an unprompted "what do you think".
-- **They name several people** → panel, but confirm the spend first.
-- **"How would X react to the signup page" vs "have X sign up"** → reacting to
-  a thing is `react`; using it toward a goal is `persona-walkthrough`. If the
-  product can be driven and the question is whether people can *get through*
-  it, walk it. See `journey-contract.md`.
-- **No personas exist yet** → do not run anything. Say what the council needs and
-  offer `persona-create`. One good persona beats an empty panel.
-
-## Pick the cheapest rung that works
-
-From `panel-topologies.md`:
+## 2. Default to the cheapest rung
 
 | Rung | Spend |
 |---|---|
-| `think` | free, contaminated |
+| `think` | free, sees this conversation |
 | `ask` | 1 agent |
-| `fanout` | N + 1 |
-| `chain` | N + 1, anchored |
-| `roundtable` | N x rounds + 1 |
 | `walkthrough` | 1 per walker, plus your audit |
+| panel `fanout` / `chain` | N + 1 |
+| panel `roundtable` | N x rounds + 1 |
 
-Recommend the cheapest rung that answers the question, and say what the next rung
-up would add:
+A bare artifact and "thoughts?" is one `persona-ask` with the most relevant
+seat, not a panel. Say what the next rung up would add, and let the user climb:
 
 > Asked the customer advocate — one clean read. If you want it weighed against
 > sales and finance too, that's a 4-agent panel.
 
-Climbing is a decision. Default down, not up.
+Two routings that get confused:
 
-## Then pick the framing
+- **Ideas vs judgement.** If the thing does not exist yet, it is `ideate`, not
+  `review` - seats cannot endorse an idea they are being asked to invent. See
+  `framings.md`.
+- **Reacting vs using.** "How would X react to the signup page" is `react` in a
+  panel. "Have X sign up" is `persona-walkthrough`: if the product can be driven
+  and the question is whether people can *get through* it, walk it.
 
-See `framings.md`. Map intent, do not ask them to choose:
+## 3. Offer the room once, never run it unasked
 
-"give me ideas" → `ideate` · "how would they react" → `react` ·
-"what am I missing" → `premortem` · "tell me why I'm wrong" → `steelman` ·
-"is this ready" → `gate` · "A or B" → `options` · "break this" → `redteam` ·
-"have them argue" → `debate` · "have them try it" → `walkthrough` ·
-otherwise → `review`.
-
-**Check the kind before anything else.** If the thing being discussed does not
-exist yet, the run is generative and the verdict contract is the wrong tool -
-seats cannot endorse an idea they are being asked to invent. Getting this wrong
-produces fake verdicts, a false unanimity warning, and polluted track records.
-
-Name the framing you picked in the confirmation line.
-
-## Before you spend anything
-
-State roster, framing, mode and agent count in one line, and wait if it is more
-than a single agent:
-
-> Pre-mortem with sales-lead, finance-lead and customer-advocate, fanout —
-> 4 agents. Go?
-
-## After
-
-Follow `memory.md`: scratch by default, decision when they are actually deciding.
-Offer the memo. Offer the artifact only if the run was of record and the config
-allows it.
-
-## Offering the council unprompted
-
-If the user is visibly weighing a consequential, hard-to-reverse decision and has
-not asked for a panel, you may offer **once**:
+If the user is visibly weighing a consequential, hard-to-reverse decision and
+has not asked, you may offer once:
 
 > Want the room on this? `pricing-council` is 3 seats plus a chairman.
 
-Never run one unasked. One offer per decision; if they decline or ignore it, drop
-it and do not raise it again.
+If they decline or ignore it, drop it for the rest of that decision.

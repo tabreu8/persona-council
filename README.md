@@ -6,7 +6,7 @@
 
 <p align="center">
   <em>Your agent already tells you what you want to hear.<br>
-  This gives it a room full of people who won't — and a record of who was right.</em>
+  This gives it a room full of people who won't — and lets them use the thing, not just judge it.</em>
 </p>
 
 <p align="center">
@@ -70,60 +70,31 @@ spawns anything.
 
 ---
 
-## The part that makes it a practice
+## You tune the personas. Nothing else does.
 
-One panel is a nice afternoon. What makes this worth installing is the loop:
+When a run shows a persona is off — it waved everything through, or objected to
+things its real counterpart never would — you say so, and `persona-create`
+adjusts the field responsible, starting from the verdict or walk step that
+showed it:
 
-```
-   decide  ──►  memo  ──►  it happens  ──►  retro  ──►  track records
-      ▲                                                      │
-      └──────────────  weights the next panel  ◄──────────────┘
-```
+> **you:** sales-lead agreed with every pricing change this month. Make it harder to convince.
 
-Four months later:
-
-> **you:** the pricing change went fine in the end — only two accounts pushed back
-
-The retro walks you through the concerns each seat raised and asks which ones
-actually came true. Then:
-
-```console
-$ npx persona-council calibration
-  sales-lead         seated  4  dissent  75%  concerns realized   0%
-      raises concerns that rarely materialize - may be crying wolf
-  customer-advocate  seated  4  dissent  25%  concerns realized  80%
-  yes-man            seated  3  dissent   0%  concerns realized   —
-      never dissented in 3+ panels - likely too agreeable to be worth a seat
-```
-
-Now the chairman can weight by track record instead of by confidence, and you
-can see which of your personas is earning its seat. **Nobody trusts an advisor
-with no track record** — this is how one gets built.
-
-Two rules keep it honest: the chairman may cite track records but **the seats
-never see them** (a seat told it was right last time gets overconfident), and a
-persona is **never auto-edited** from its record — the pattern gets surfaced,
-you decide.
-
-The most valuable output of the whole loop is the blind spot that keeps
-recurring. When support load is the miss in three retros running, that isn't a
-bad persona — it's a missing seat, and the skill says so.
+There is no scoring loop, no track record, and no automatic re-weighting. A
+persona only changes when you ask, so you always know what you're asking.
 
 ---
 
 ## Two kinds of memory, deliberately kept apart
 
 Most of what you run is thinking out loud. Some of it is deciding. Treating
-those the same ruins both: brainstorms have no outcome, so they sit forever as
-open decisions, and a track record computed across idle riffs is noise.
+those the same ruins both: the three calls that mattered get buried under forty
+riffs nobody will reread.
 
 | | `scratch/` | `decisions/` |
 |---|---|---|
 | Default | **yes** | you say so |
 | Kept | last 20, 14 days | forever |
 | Gitignored | yes | **no** — meant to be committed |
-| Can carry an outcome | no | yes |
-| Feeds track records | **never** | yes |
 
 Scratch is the default because promoting a run costs one command and cleaning a
 polluted journal costs an afternoon. When a riff turns real mid-conversation,
@@ -183,7 +154,7 @@ no to on its own, and a chairman weighing verdicts should know it.
 
 ---
 
-## Six tools, one door
+## Five tools, one door
 
 `/council` routes to the right one. You never have to remember the rest.
 
@@ -194,7 +165,6 @@ no to on its own, and a chairman weighing verdicts should know it.
 | **`persona-ask`** | no | 1 | A second opinion you can lean on |
 | **`persona-panel`** | no | N + chairman | A decision weighed from several angles |
 | **`persona-walkthrough`** | no | 1 per walker | Watching a persona actually use the product |
-| **`persona-retro`** | — | — | Closing the loop on what happened |
 
 `persona-think` is the **contaminated** one, and the skill says so out loud. The
 persona sees everything you've discussed, including what you're hoping to hear.
@@ -229,9 +199,9 @@ So runs come in four kinds, and the kind is recorded:
 | **reactions** | respond as people, not judges | behaviour — what they'd actually do next |
 | **journey** | use the real product toward a goal | a think-aloud log per step, audited |
 
-Only evaluative runs feed track records. There is no such thing as being right
-or wrong about an idea you proposed, and counting one as an endorsement is how a
-perfectly good persona gets flagged as too agreeable.
+Get the kind wrong and the output is nonsense: a brainstorm filed as verdicts
+reports every idea as an "endorse" and a room that was never disagreeing as
+suspicious unanimity.
 
 ### Ask the room the right question
 
@@ -328,8 +298,9 @@ $ npx persona-council memo 2026-08-19-usage-based-pricing --html     # rich page
 ```
 
 The HTML is self-contained, theme-aware and printable: decision, verdict chips,
-the disputes split factual-from-values, blind spots, action plan, revisit-when,
-and the outcome once a retro lands. Paste it into Notion, or have your agent
+the disputes split factual-from-values, blind spots, action plan and
+revisit-when — or, for a walkthrough, every step of every journey and the
+friction ranked worst-first. Paste it into Notion, or have your agent
 publish it as a shareable artifact.
 
 ---
@@ -359,7 +330,9 @@ If the server isn't connected it says so by name, instead of inventing a persona
 ## Does it actually work?
 
 Don't take the README's word for it. The package ships artifacts with **known
-flaws planted in them**, across pricing, marketing, hiring and engineering:
+flaws planted in them**, across pricing, marketing, hiring and engineering —
+plus `invite-flow`, a tiny web app with planted usability problems for a
+walker to find:
 
 ```console
 $ npx persona-council eval list
@@ -371,13 +344,24 @@ pricing-change (pricing)
   baseline 0/6  +100pp
 ```
 
-Recording an outcome is a conversation, not a command — tell your agent what
-happened and `/persona-retro` walks the concerns with you.
-
 Run your baseline in a clean session, run your roster in another, score both.
-The scorer is keyword-based and says so — it over-credits name-dropping and
-under-credits a good argument in unexpected words. Use it as a smoke test and
-read the misses.
+
+The default scorer is keyword-based and says so — it over-credits name-dropping
+and under-credits a good argument in unexpected words. For a real grade, a
+fresh sub-agent that never saw the run follows the grading brief and returns a
+judgment per flaw, each with a quote as evidence:
+
+```console
+$ npx persona-council eval rubric pricing-change      # the brief for the grader
+$ npx persona-council eval score --case pricing-change \
+    --response panel.md --judged grades.json
+
+  caught 5/6 planted flaws  (weighted 89%)  by keyword
+  caught 4/6 planted flaws  (weighted 78%)  by grader
+    no-rollback: keyword says caught, grader says not - name-drop?
+```
+
+The disagreements are the lines worth reading by hand.
 
 The real use is on **your** personas: add a case from your own domain where you
 already know the problems, and find out whether your roster catches them. A flaw
@@ -395,7 +379,7 @@ no roster of yours has ever caught is the most valuable thing in that directory.
 ```
 
 **npm** — for other projects, scripting, CI, or the full CLI (`doctor`,
-`calibration`, `memo`, `eval score`) outside a plugin context. Writes into
+`memo`, `compare`, `eval score`) outside a plugin context. Writes into
 `.claude/`:
 
 ```bash
@@ -413,8 +397,9 @@ Code, via [Vercel's open standard](https://github.com/vercel-labs/skills):
 npx skills add tabreu8/persona-council
 ```
 
-Installs just the seven skills — no CLI, no memory journal, no `doctor`. Each one
-carries its own `references/` copy of the docs it cites (derived from the same
+Installs just the six skills — no CLI, no memory journal, no `doctor`. Each one
+carries its own `references/` copy of the docs it cites, and the docs those cite
+(derived from the same
 source the other two installs share, kept in sync by a test — see
 `scripts/sync-skill-references.mjs`), so it works standalone with nothing else
 from this repo. Reach for the plugin or npm install first if you want the full
@@ -424,20 +409,20 @@ command surface; this one exists for agents that only speak the Skills standard.
 init          Install skills, commands, agents, references
 list          Every persona across every configured source
 new <id>      Scaffold one to fill in
-doctor        Config, install, memory, and which personas are too soft
-roster        list | add | remove
+doctor        Config, install, memory, soft personas, stale evidence
+roster        list | add | remove  (walkthrough rosters carry --goal and --at)
 decisions     list | show <id>
 memo <id>     Re-render a decision as markdown or a rich page
-calibration   Persona track records, from decisions with outcomes
+compare <a> <b>  Before/after for a re-walk: outcomes, steps, friction by id
 promote <id>  Move a scratch run onto the record
 prune         Drop stale scratch runs — decisions are never touched
 sources       list | add | sync
-eval          list | score
+eval          list | rubric | score
 uninstall     Removes what it installed; keeps what you wrote
 ```
 
 **No personas ship with this package.** Deliberately. A persona you didn't write
-is a viewpoint you can't calibrate. `/persona-create` builds your first in about
+is a viewpoint you can't tune. `/persona-create` builds your first in about
 two minutes, and `doctor` tells you which of yours are too soft to bother asking.
 
 ---
@@ -456,7 +441,7 @@ politely, plausibly, uselessly. The whole design is counter-pressure:
 | A second opinion must be **uncontaminated** | `persona-ask` runs in a sub-agent that has never seen your chat, behind payload rules that forbid your framing. |
 | Round two is about **arguments, not authority** | Roundtable digests are anonymized. A seat that knows which position came from "the security expert" defers to it. |
 | Unanimity is a **finding, not a result** | The chairman must flag it, may not average verdicts into "broadly positive", and may not drop the lone objector. |
-| Opinions must eventually **meet reality** | Retros mark which concerns actually materialized. A persona whose warnings never land gets flagged. |
+| Opinions are cheap; **behaviour isn't** | `persona-walkthrough` makes a persona use the product, and a walker cannot read the source to get past a screen no real user could. |
 
 And one rule pointed at the tool itself: **no politeness directives.** No skill
 here ever tells a persona to be constructive, balanced or considerate. Those are
@@ -502,9 +487,9 @@ not a real head of customer success. She's a lens that makes the model surface
 the renewal-desk consequences it had quietly deprioritized. A panel finds what
 you failed to weigh — not facts nobody in the room has.
 
-**Calibration needs patience.** Track records mean nothing until several
-decisions have outcomes. The first month it's an empty table; that's honest, and
-`doctor` will tell you how many decisions are still awaiting a retro.
+**A walker is not a user.** It surfaces where the product assumes knowledge its
+persona doesn't have — a real usability session still finds things no lens
+will. Treat a walkthrough as the cheap pass before the expensive one.
 
 **It costs real tokens.** A five-seat roundtable is sixteen-plus sub-agent runs.
 Every panel announces its roster, framing, mode and spawn count *before*
@@ -514,7 +499,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 79 tests, `node --test`, no framework — including a
+Zero runtime dependencies. 89 tests, `node --test`, no framework — including a
 guard that every field the docs tell an agent to record actually reaches the
 memo, because "recorded and silently dropped" has been the most common bug here.
 
@@ -525,15 +510,15 @@ migrations. Instead they live in their own directory in a portable format, and
 the skills inject them into generic runners.
 
 ```
-skills/       create · think · ask · panel · walkthrough · retro · council
-agents/       persona-runner (read-only) · persona-walker · persona-chairman
-reference/    the shared docs the skills cite at runtime
+skills/       create · think · ask · panel · walkthrough · council
+agents/       persona-runner (read-only) · persona-walker (no file access) · persona-chairman
+reference/    the shared docs the skills cite at runtime — dispatch.md is the procedure all three dispatching skills share
 evals/        artifacts with planted flaws, and the answer keys
 src/ bin/     installer, persona resolver, memory store, memo renderer
 ```
 
 `reference/independence.md` is the most opinionated file in the repo, and
-`reference/memory.md` the most load-bearing. Read those two if you read any.
+`reference/dispatch.md` the most load-bearing. Read those two if you read any.
 
 ---
 

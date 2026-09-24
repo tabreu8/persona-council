@@ -63,7 +63,7 @@ function isJourney(record) {
   return record.kind === 'journey';
 }
 
-/** Runs that judge something. Only these produce verdicts or track records. */
+/** Runs that judge something. Only these produce verdicts. */
 export function isEvaluative(record) {
   return (record.kind || 'evaluative') === 'evaluative';
 }
@@ -151,7 +151,7 @@ export function renderMemoMarkdown(record) {
   if ((s.friction || []).length) {
     lines.push('## Friction', '');
     for (const f of bySeverity(s.friction)) {
-      const where = [f.persona, f.step != null ? `step ${f.step}` : null, f.cause].filter(Boolean).join(' · ');
+      const where = [f.id ? `\`${f.id}\`` : null, f.persona, f.step != null ? `step ${f.step}` : null, f.cause].filter(Boolean).join(' · ');
       lines.push(`- **${f.severity || 'unrated'}**${where ? ` · ${where}` : ''} — ${f.issue || f}`);
       if (f.evidence) lines.push(`  - *Evidence:* ${f.evidence}`);
       if (f.fix) lines.push(`  - *Fix:* ${f.fix}`);
@@ -189,8 +189,8 @@ export function renderMemoMarkdown(record) {
     lines.push('');
   }
 
-  // The concerns are what a retro marks realized or not. Dropping them here
-  // would leave the memo unable to support the loop it exists to feed.
+  // The concerns are the substance of an objection. A memo that shows only the
+  // one-line position lets a blocking concern disappear from the record.
   const withConcerns = (record.verdicts || []).filter((v) => (v.concerns || []).length || v.changeMyMind);
   if (withConcerns.length) {
     lines.push('## What each seat raised', '');
@@ -249,18 +249,6 @@ export function renderMemoMarkdown(record) {
     ? 'Every seat agreed. That may say more about the roster than the proposal.'
     : null);
   if (warning) lines.push('## Confidence warning', '', warning, '');
-
-  if (record.outcome) {
-    const o = record.outcome;
-    lines.push('## Outcome', '', `**What happened:** ${o.choseSummary || o.chose || '—'}`, '');
-    if (o.result) lines.push(`**Result:** ${o.result}${o.resultSummary ? ` — ${o.resultSummary}` : ''}`, '');
-    const realized = (o.concerns || []).filter((c) => c.realized);
-    if (realized.length) {
-      lines.push('**Concerns that materialized:**', '');
-      for (const c of realized) lines.push(`- ${c.persona}: ${c.concern}${c.note ? ` (${c.note})` : ''}`);
-      lines.push('');
-    }
-  }
 
   return `${lines.filter((l) => l !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()}\n`;
 }
@@ -347,10 +335,9 @@ li .closes { color: var(--muted); font-size: .875rem; }
 .warn { background: var(--maybe-bg); color: var(--maybe); border-radius: 10px; padding: 1rem 1.2rem;
         font-size: .92rem; line-height: 1.5; }
 .warn strong { display: block; margin-bottom: .25rem; }
-.outcome { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem 1.4rem; }
 footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
          color: var(--muted); font-size: .8rem; }
-@media print { body { padding: 0; } .decision, .outcome { break-inside: avoid; } }
+@media print { body { padding: 0; } .decision, .seat-block { break-inside: avoid; } }
 `;
 
 export function renderMemoHtml(record, { title } = {}) {
@@ -420,7 +407,8 @@ export function renderMemoHtml(record, { title } = {}) {
       <div class="seat-head"><span class="chip ${SEVERITY_TONE[f.severity] || 'unknown'}">${esc(f.severity || 'unrated')}</span>
         ${f.persona ? `<span class="seat">${esc(f.persona)}</span>` : ''}
         ${f.step != null ? `<span class="conf">step ${esc(f.step)}</span>` : ''}
-        ${f.cause ? `<span class="conf">${esc(f.cause)}</span>` : ''}</div>
+        ${f.cause ? `<span class="conf">${esc(f.cause)}</span>` : ''}
+        ${f.id ? `<span class="conf"><code>${esc(f.id)}</code></span>` : ''}</div>
       <div>${esc(f.issue || f)}</div>
       ${f.evidence ? `<p class="cmm"><span>Evidence:</span> ${esc(f.evidence)}</p>` : ''}
       ${f.fix ? `<p class="cmm"><span>Fix:</span> ${esc(f.fix)}</p>` : ''}
@@ -521,16 +509,6 @@ export function renderMemoHtml(record, { title } = {}) {
     : null);
   if (warning) {
     parts.push('<h2>Confidence</h2>', `<div class="warn"><strong>Read this before acting</strong>${esc(warning)}</div>`);
-  }
-
-  if (record.outcome) {
-    const o = record.outcome;
-    const realized = (o.concerns || []).filter((c) => c.realized);
-    parts.push('<h2>Outcome</h2>', `<div class="outcome">
-      <p><strong>What happened:</strong> ${esc(o.choseSummary || o.chose || '—')}</p>
-      ${o.result ? `<p><strong>Result:</strong> ${esc(o.result)}${o.resultSummary ? ` — ${esc(o.resultSummary)}` : ''}</p>` : ''}
-      ${realized.length ? `<p><strong>Concerns that materialized:</strong></p><ul>${realized.map((c) => `<li>${esc(c.persona)}: ${esc(c.concern)}</li>`).join('')}</ul>` : ''}
-    </div>`);
   }
 
   const seats = (record.personas || record.verdicts || record.journeys || []).map((p) => p.id || p.persona).filter(Boolean);

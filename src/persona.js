@@ -111,10 +111,13 @@ function hasPlaceholder(value) {
   return typeof value === 'string' && /\bTODO\b/i.test(value);
 }
 
+/** Evidence older than this has probably stopped describing the people it came from. */
+export const STALE_EVIDENCE_DAYS = 180;
+
 /**
  * @returns {{ok: boolean, errors: string[], warnings: string[]}}
  */
-export function validatePersona(persona) {
+export function validatePersona(persona, { now = Date.now() } = {}) {
   const errors = [];
   const warnings = [];
 
@@ -157,6 +160,18 @@ export function validatePersona(persona) {
   for (const key of Object.keys(customFields(persona))) {
     const near = possibleTypo(key);
     if (near) warnings.push(`custom field "${key}" is close to the standard field "${near}" - typo, or intentional?`);
+  }
+
+  if (persona.grounded_at) {
+    const gathered = Date.parse(String(persona.grounded_at));
+    if (Number.isNaN(gathered)) {
+      warnings.push(`grounded_at "${persona.grounded_at}" is not a date - use YYYY-MM-DD`);
+    } else {
+      const days = Math.floor((now - gathered) / 86400000);
+      if (days > STALE_EVIDENCE_DAYS) {
+        warnings.push(`evidence gathered ${String(persona.grounded_at).slice(0, 10)}, ${Math.round(days / 30)} months ago - the people it describes may have moved on; refresh it with persona-create`);
+      }
+    }
   }
 
   return { ok: errors.length === 0, errors, warnings };

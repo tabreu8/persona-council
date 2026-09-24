@@ -7,14 +7,11 @@ export const CONFIG_VERSION = 2;
 /**
  * Runs land in one of two stores, and the distinction is not cosmetic.
  *
- * `scratch` is for thinking out loud: cheap, auto-pruned, and deliberately
- * excluded from persona track records. A brainstorm is never "decided", so it
- * never earns an outcome -- journaling it would leave an open decision that can
- * never close, and calibration computed over idle riffs is noise.
+ * `scratch` is for thinking out loud: cheap, auto-pruned, gitignored.
  *
- * `decision` is of-record: kept forever, eligible for a retro, and the only
- * thing that feeds calibration. Scratch is the default because promoting a run
- * is cheap and un-polluting a journal is not.
+ * `decision` is of-record: kept forever and committed, so the reasoning behind
+ * a call survives the chat it happened in. Scratch is the default because
+ * promoting a run is cheap and un-polluting a journal of riffs is not.
  */
 export const MEMORY_MODES = ['scratch', 'decision'];
 
@@ -49,7 +46,6 @@ export function defaultConfig() {
       maxRounds: 3,
       requireDissenter: true,
       anonymizeRoundTable: true,
-      citeCalibration: true,
     },
     // Named rosters turn a habit into a rule: "run it past launch-review".
     rosters: {},
@@ -189,6 +185,15 @@ export function validateConfig(config) {
     }
     if (roster.mode && !['fanout', 'chain', 'roundtable'].includes(roster.mode)) {
       errors.push(`roster "${name}" has unknown mode "${roster.mode}"`);
+    }
+    // A walkthrough roster is a set of walkers, each on their own journey.
+    // Wiring walkers into a chain or a debate would have each follow the last
+    // one's route, which is the one thing a walkthrough must never do.
+    if (roster.framing === 'walkthrough' && roster.mode && roster.mode !== 'fanout') {
+      errors.push(`roster "${name}" is a walkthrough, so its walkers run independently - mode must be fanout, not "${roster.mode}"`);
+    }
+    if ((roster.goal || roster.at) && roster.framing !== 'walkthrough') {
+      errors.push(`roster "${name}" has a goal or entry point but is not a walkthrough - add framing "walkthrough"`);
     }
   }
   return errors;

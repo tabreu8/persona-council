@@ -252,3 +252,12 @@ ${'x'.repeat(60)}`);
   assert.deepEqual(customFields(persona), { im: 'informal nickname' });
   assert.deepEqual(validatePersona(persona).warnings, []);
 });
+
+test('evidence older than six months is flagged as stale, recent evidence is not', () => {
+  const now = Date.parse('2026-09-24T00:00:00Z');
+  const grounded = (date) => validatePersona({ ...parsePersona(GOOD_PERSONA), grounded_at: date }, { now }).warnings;
+
+  assert.ok(!grounded('2026-08-01').some((w) => /evidence gathered/.test(w)));
+  assert.match(grounded('2025-11-01').join('\n'), /evidence gathered 2025-11-01, 11 months ago/);
+  assert.match(grounded('last spring').join('\n'), /not a date/);
+});

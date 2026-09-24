@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { install } from '../src/install.js';
 import { loadConfig, defaultConfig, migrateConfig, validateConfig } from '../src/config.js';
 import {
-  writeDecision, readDecision, listDecisions, writeOutcome, makeDecisionId,
-  listScratch, pruneScratch, promoteScratch, calibration, memoryStats, scratchDir,
+  writeDecision, readDecision, listDecisions, makeDecisionId,
+  listScratch, pruneScratch, promoteScratch, memoryStats, scratchDir, findRun,
 } from '../src/memory.js';
 import { renderMemoMarkdown, renderMemoHtml, isUnanimous } from '../src/render.js';
 
@@ -70,7 +70,6 @@ test('a decision round-trips and gets a dated, slugged id', () => {
   const read = readDecision(root, config, id);
   assert.equal(read.question, panelRecord().question);
   assert.equal(read.mode, 'decision');
-  assert.equal(read.outcome, null);
 });
 
 test('two decisions on one day and topic do not collide', () => {
@@ -80,21 +79,6 @@ test('two decisions on one day and topic do not collide', () => {
   const second = writeDecision(root, config, panelRecord());
   assert.notEqual(first.id, second.id);
   assert.equal(listDecisions(root, config).length, 2);
-});
-
-test('outcomes attach to a decision and reject unknown result values', () => {
-  const root = sandbox();
-  const { config } = loadConfig(root);
-  const { id } = writeDecision(root, config, panelRecord());
-
-  writeOutcome(root, config, id, {
-    chose: 'not-shipped', result: 'good',
-    concerns: [{ persona: 'sales-lead', concern: 'Renewal renegotiation', realized: true }],
-  });
-  assert.equal(readDecision(root, config, id).outcome.result, 'good');
-
-  assert.throws(() => writeOutcome(root, config, id, { result: 'excellent' }), /must be one of/);
-  assert.throws(() => writeOutcome(root, config, 'nope', {}), /no decision/);
 });
 
 test('scratch prunes by count and age; decisions never do', () => {
@@ -136,62 +120,17 @@ test('a brainstorm can be promoted when it turns real', () => {
   assert.throws(() => promoteScratch(root, config, 'run-1'), /no scratch run/);
 });
 
-test('calibration counts only decisions, never scratch', () => {
-  const root = sandbox();
-  const { config } = loadConfig(root);
-  fs.writeFileSync(path.join(scratchDir(root, config), 'brainstorm.json'), JSON.stringify(panelRecord()));
-
-  assert.deepEqual(calibration(root, config), [], 'a brainstorm has no outcome, so it proves nothing');
-
-  const { id } = writeDecision(root, config, panelRecord());
-  writeOutcome(root, config, id, {
-    result: 'good',
-    concerns: [
-      { persona: 'sales-lead', concern: 'renegotiation', realized: true },
-      { persona: 'finance-lead', concern: 'forecasting', realized: false },
-    ],
-  });
-
-  const rows = calibration(root, config);
-  const sales = rows.find((r) => r.persona === 'sales-lead');
-  const finance = rows.find((r) => r.persona === 'finance-lead');
-  assert.equal(sales.hitRate, 1);
-  assert.equal(finance.hitRate, 0);
-  assert.equal(finance.dissented, 1, 'finance was the lone endorser');
-  assert.equal(sales.dissented, 0);
-});
-
-test('a persona that never dissents gets flagged', () => {
-  const root = sandbox();
-  const { config } = loadConfig(root);
-  for (let i = 0; i < 3; i += 1) {
-    writeDecision(root, config, panelRecord({
-      question: `decision number ${i}`,
-      verdicts: [
-        { persona: 'yes-man', verdict: 'endorse' },
-        { persona: 'skeptic', verdict: 'endorse' },
-        { persona: 'wildcard', verdict: 'oppose' },
-      ],
-    }));
-  }
-  const rows = calibration(root, config);
-  assert.match(rows.find((r) => r.persona === 'yes-man').flags[0], /never dissented/);
-  assert.deepEqual(rows.find((r) => r.persona === 'wildcard').flags, []);
-});
-
-test('memoryStats reports what still needs a retro', () => {
+test('memoryStats counts both stores, and findRun reads from either', () => {
   const root = sandbox();
   const { config } = loadConfig(root);
   const { id } = writeDecision(root, config, panelRecord());
-  writeDecision(root, config, panelRecord({ question: 'something else entirely' }));
-  writeOutcome(root, config, id, { result: 'mixed' });
+  fs.writeFileSync(path.join(scratchDir(root, config), 'run-1.json'), JSON.stringify(panelRecord({ question: 'riff' })));
 
-  const stats = memoryStats(root, config);
-  assert.equal(stats.decisions, 2);
-  assert.equal(stats.withOutcome, 1);
-  assert.equal(stats.awaitingRetro.length, 1);
+  assert.deepEqual(memoryStats(root, config), { scratch: 1, decisions: 1 });
+  assert.equal(findRun(root, config, id).mode, 'decision');
+  assert.equal(findRun(root, config, 'run-1').mode, 'scratch');
+  assert.equal(findRun(root, config, 'nope'), null);
 });
-
 test('unanimity is detected so the memo can flag it', () => {
   assert.equal(isUnanimous({ verdicts: [{ verdict: 'endorse' }, { verdict: 'endorse' }] }), true);
   assert.equal(isUnanimous({ verdicts: [{ verdict: 'endorse' }, { verdict: 'oppose' }] }), false);
@@ -285,24 +224,21 @@ test('CLI roster add warns about seats that do not exist yet', () => {
   assert.match(run(['roster', 'list'], root), /no rosters yet/);
 });
 
-test('CLI surfaces decisions, memos and calibration', () => {
+test('CLI surfaces decisions and memos, and has no retro loop', () => {
   const root = sandbox();
   const { config } = loadConfig(root);
   const { id } = writeDecision(root, config, panelRecord());
 
-  assert.match(run(['decisions', 'list'], root), /open/);
+  assert.match(run(['decisions', 'list'], root), new RegExp(id));
   assert.match(run(['decisions', 'show', id], root), /## Decision/);
 
   run(['memo', id, '--html', '--out', 'memo.html'], root);
   const html = fs.readFileSync(path.join(root, 'memo.html'), 'utf8');
   assert.match(html, /usage-based pricing/);
 
-  writeOutcome(root, config, id, { result: 'good', concerns: [{ persona: 'sales-lead', concern: 'c', realized: true }] });
-  assert.match(run(['decisions', 'list'], root), /closed/);
-  assert.match(run(['calibration'], root), /sales-lead/);
-  assert.match(run(['memo', id], root), /## Outcome/);
+  assert.throws(() => run(['calibration'], root), /unknown command/);
+  assert.ok(!/retro|track record/i.test(run(['--help'], root)));
 });
-
 test('CLI prune leaves the record alone', () => {
   const root = sandbox();
   const { config } = loadConfig(root);
@@ -363,9 +299,9 @@ test('weighted recall counts major flaws for more than minor ones', async () => 
   assert.ok(majorOnly.caught >= 2);
 });
 
-test('memos carry every concern a seat raised — the retro reads these', () => {
-  // Regression: the memo once rendered only the one-line summaries, which left
-  // persona-retro unable to mark concerns realized from the command it names.
+test('memos carry every concern a seat raised, not just the one-line position', () => {
+  // Regression: the memo once rendered only the one-line summaries, so a
+  // blocking concern vanished from the record the team reads back.
   const record = {
     ...panelRecord(),
     verdicts: [{
@@ -521,7 +457,7 @@ const FULL_RECORDS = {
       summary: 'SUMMARY-SENTINEL',
       completion: 'COMPLETION-SENTINEL',
       friction: [{
-        persona: 'seat-one', step: 1, issue: 'ISSUE-SENTINEL', severity: 'blocker',
+        id: 'FRICTIONID-SENTINEL', persona: 'seat-one', step: 1, issue: 'ISSUE-SENTINEL', severity: 'blocker',
         cause: 'CAUSE-SENTINEL', evidence: 'EVIDENCE-SENTINEL', fix: 'FIX-SENTINEL',
       }],
       expectationGaps: ['GAP-SENTINEL'],
@@ -561,9 +497,7 @@ test('a generative run is never reported as suspicious unanimity', () => {
   assert.ok(!renderMemoMarkdown(record).includes('may say more about the roster'));
 });
 
-test('only evaluative runs build persona track records', () => {
-  // Regression: a brainstorm recorded in the evaluative shape banked an
-  // "endorse" per contributing seat, flagging good personas as too agreeable.
+test('a brainstorm recorded as a decision keeps its kind', () => {
   const root = sandbox();
   const { config } = loadConfig(root);
 
@@ -576,10 +510,8 @@ test('only evaluative runs build persona track records', () => {
     });
   }
 
-  assert.deepEqual(calibration(root, config), [], 'ideas are not endorsements');
   assert.equal(memoryStats(root, config).decisions, 3);
-  assert.equal(memoryStats(root, config).evaluative, 0);
-  assert.deepEqual(memoryStats(root, config).awaitingRetro, [], 'a brainstorm never awaits an outcome');
+  assert.ok(listDecisions(root, config).every((d) => d.kind === 'generative'));
 });
 
 test('journey friction renders worst-first, whatever order it was recorded in', () => {
@@ -602,17 +534,3 @@ test('journey friction renders worst-first, whatever order it was recorded in', 
   assert.ok(!renderMemoMarkdown(record).includes('Confidence warning'), 'a journey is not a vote');
 });
 
-test('journey runs never build track records or await a retro', () => {
-  // Getting lost in an onboarding flow is not a prediction that can come true.
-  const root = sandbox();
-  const { config } = loadConfig(root);
-  writeDecision(root, config, {
-    kind: 'journey',
-    question: 'Can a first-time admin invite a teammate?',
-    recordedAt: '2026-09-24T10:00:00Z',
-    journeys: [{ persona: 'first-time-admin', outcome: 'gave-up', steps: [] }],
-  });
-
-  assert.deepEqual(calibration(root, config), []);
-  assert.deepEqual(memoryStats(root, config).awaitingRetro, []);
-});

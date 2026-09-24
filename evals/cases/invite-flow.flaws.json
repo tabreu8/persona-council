@@ -1,0 +1,47 @@
+{
+  "case": "invite-flow",
+  "domain": "product",
+  "kind": "journey",
+  "artifact": "invite-flow/index.html",
+  "goal": "A colleague, Sam, needs access to the workspace so they can see the dashboards. Get them in.",
+  "stopPoints": ["confirming any charge to the card on file"],
+  "description": "A small static analytics app, walked by a first-time admin. Nothing about the problems is said here - the listing is visible to the auditor.",
+  "flaws": [
+    {
+      "id": "members-under-billing",
+      "severity": "major",
+      "description": "People management is only reachable through Settings, then Billing, then Manage seats. Nothing in the navigation says Members, People or Team.",
+      "keywords": ["under billing", "inside billing", "via billing", "through billing", "billing page", "manage seats", "no members", "no team", "no people"]
+    },
+    {
+      "id": "invite-forces-new-seat",
+      "severity": "major",
+      "description": "The only way to invite someone is 'Add seat ($12/mo)', which charges the card - even though billing shows 8 of 10 paid seats in use, so two are already paid for and unused.",
+      "keywords": ["8 of 10", "unused seat", "already paid", "spare seat", "add seat", "$12", "charge", "pay to invite", "paying for"]
+    },
+    {
+      "id": "default-role-owner",
+      "severity": "major",
+      "description": "The role picker on the invite form defaults to Owner, so the obvious path grants a new teammate full control of the workspace.",
+      "keywords": ["owner", "default role", "defaults to", "full control", "full access"]
+    },
+    {
+      "id": "help-search-dead-end",
+      "severity": "moderate",
+      "description": "Searching help for 'invite', 'add user' or 'team' returns 'No results.' - the only relevant article is titled 'Provisioning principals'.",
+      "keywords": ["no results", "help search", "search returned", "searched help", "search for invite"]
+    },
+    {
+      "id": "workspace-is-appearance",
+      "severity": "minor",
+      "description": "The 'Workspace' nav item - where most people look for the people in their workspace - only holds name, theme and logo.",
+      "keywords": ["appearance", "theme", "logo", "workspace page", "workspace link", "workspace nav"]
+    },
+    {
+      "id": "principal-jargon",
+      "severity": "minor",
+      "description": "The invite form speaks internal vocabulary: 'Provision a principal', 'Principal email'. A first-time admin does not know a principal is a person.",
+      "keywords": ["principal", "provision", "jargon", "vocabulary", "terminology"]
+    }
+  ]
+}

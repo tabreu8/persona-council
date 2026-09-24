@@ -104,17 +104,3 @@ conversation. It outputs:
 
 The chairman may not add opinions of its own beyond identifying blind spots, and
 may not resolve a value dispute on the user's behalf.
-
-## Weighting by track record
-
-When `panel.citeCalibration` is on and decisions carry outcomes, run
-`npx persona-council calibration` and give the results **to the chairman only**.
-
-It may use them to weight - "sales-lead has opposed all four pricing decisions
-and none of its concerns materialized, so this objection is discounted" - and it
-must say so out loud when it does. Silent weighting is just the chairman having
-opinions.
-
-The seats never see track records. A seat told it was wrong last time gets
-defensive; told it was right, overconfident. Either way you have traded the
-independence you paid for. See `memory.md`.

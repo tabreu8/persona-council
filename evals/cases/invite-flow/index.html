@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Plotline — Dashboard</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><strong>Plotline</strong><a href="index.html">Dashboard</a><a href="projects.html">Projects</a><a href="workspace.html">Workspace</a><a href="settings.html">Settings</a></header>
+<main>
+  <h1>Good morning, Alex</h1>
+  <div class="card">
+    <h2>Your workspace: Acme Analytics</h2>
+    <p>3 projects · 8 people · Team plan</p>
+  </div>
+  <div class="card">
+    <h2>Help</h2>
+    <form id="help"><input id="q" placeholder="Search help articles"> <button>Search</button></form>
+    <ul id="results"></ul>
+  </div>
+</main>
+<script>
+  // Help articles are written in the product's internal vocabulary.
+  const articles = [
+    ['Provisioning principals', 'seats.html'],
+    ['Changing your plan', 'billing.html'],
+    ['Customising workspace appearance', 'workspace.html'],
+  ];
+  document.getElementById('help').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const hits = articles.filter(([title]) => q && title.toLowerCase().includes(q));
+    document.getElementById('results').innerHTML = hits.length
+      ? hits.map(([t, href]) => '<li><a href="' + href + '">' + t + '</a></li>').join('')
+      : '<li class="muted">No results.</li>';
+  });
+</script>
+</body></html>

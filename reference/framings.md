@@ -10,8 +10,7 @@ topology that serves it.
 Framings come in four kinds, and the kind decides which output contract the
 seats are given. Getting this wrong is not cosmetic: a brainstorm run under an
 evaluative contract files ideas under "concerns", reports a room that was never
-disagreeing as suspicious unanimity, and banks a false "endorse" against every
-seat's track record.
+disagreeing as suspicious unanimity, and records every idea as an "endorse".
 
 **Evaluative** — something exists; the room judges it. Contract:
 `verdict-contract.md`.

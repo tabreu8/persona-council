@@ -139,6 +139,13 @@ Same procedure, but read the current file first and preserve what the user has
 tuned. Bump `version`. State what you changed and why in one line. Do not
 rewrite a persona wholesale when asked to adjust one field.
 
+**After a run.** The usual reason to edit is that a run showed the persona is
+off: it agreed with everything, objected to things its real counterpart would
+not, or missed the concern it exists to raise. Start from that evidence - quote
+the verdict or walk step - and change the field responsible (usually `mandate`,
+`biases` or `blind_spots`), not the voice. Only when the user asks; nothing in
+this plugin edits or scores a persona on its own.
+
 ## Common request shapes
 
 - "Create a persona for X" - full procedure.

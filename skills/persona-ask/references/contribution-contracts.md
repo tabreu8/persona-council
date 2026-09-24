@@ -6,8 +6,8 @@ room is asked what it makes of it. A lot of useful persona work is not that.
 Asking a persona to "endorse" a brainstorm produces nonsense: there is nothing
 to endorse, "confidence: low" describes nothing, and the ideas end up filed
 under a heading called *concerns*. Worse, a room that was never disagreeing gets
-reported as suspicious unanimity, and — if the run is recorded — every seat
-banks a false "endorse" against its track record.
+reported as suspicious unanimity, and the record files every idea as an
+"endorse".
 
 So: three kinds of run here, and the kind is recorded. A fourth, `journey` —
 the persona uses the product instead of looking at it — has its own contract
@@ -18,9 +18,6 @@ in `journey-contract.md`.
 | `evaluative` (default) | judge something that exists | `verdict-contract.md` |
 | `generative` | produce options from its lens | **contribution**, below |
 | `reactions` | respond as itself, not assess | **reaction**, below |
-
-Only `evaluative` runs feed persona track records. There is no such thing as
-being right or wrong about an idea you proposed.
 
 ---
 

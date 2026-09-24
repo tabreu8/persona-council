@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Plotline — Seats</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><strong>Plotline</strong><a href="index.html">Dashboard</a><a href="projects.html">Projects</a><a href="workspace.html">Workspace</a><a href="settings.html">Settings</a></header>
+<main>
+  <h1>Seats</h1>
+  <div class="card">
+    <h2>Provision a principal</h2>
+    <label for="email">Principal email</label><input id="email" type="email">
+    <label for="role">Role</label>
+    <select id="role"><option selected>Owner</option><option>Editor</option><option>Viewer</option></select>
+    <p><button class="primary" id="add">Add seat ($12/mo)</button></p>
+  </div>
+  <div class="card">
+    <h2>Principals (8)</h2>
+    <p class="muted">alex@acme.test (Owner) · jo@acme.test · priya@acme.test · kofi@acme.test · lee@acme.test · ana@acme.test · tom@acme.test · mei@acme.test</p>
+  </div>
+</main>
+<dialog id="confirm">
+  <p><strong>Confirm new seat</strong></p>
+  <p>Visa ending 4242 will be charged $12.00 today (prorated) and $12/mo from Oct 1.</p>
+  <p><button id="cancel">Cancel</button> <button class="primary">Confirm and charge</button></p>
+</dialog>
+<script>
+  const dialog = document.getElementById('confirm');
+  document.getElementById('add').addEventListener('click', () => dialog.showModal());
+  document.getElementById('cancel').addEventListener('click', () => dialog.close());
+</script>
+</body></html>
