@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { parseArgs } from 'node:util';
+import { pathToFileURL } from 'node:url';
 import { loadConfig, saveConfig, validateConfig, mcpSourceTemplate, defaultConfig } from '../src/config.js';
 import {
   listDecisions, readDecision, pruneScratch, promoteScratch, memoryStats, findRun,
@@ -556,7 +557,8 @@ function cmdEval(positionals, values) {
       console.log(`      ${c.dim(spec.description)}`);
       if (walk) {
         console.log(`      ${c.dim('goal:')} ${spec.goal}`);
-        console.log(`      ${c.dim('start:')} ${c.dim(`file://${spec.artifact}`)}`);
+        // pathToFileURL, not 'file://' + path: on Windows that yields file://D:\...
+        console.log(`      ${c.dim('start:')} ${c.dim(pathToFileURL(spec.artifact).href)}`);
         if ((spec.stopPoints || []).length) console.log(`      ${c.dim('stop at:')} ${spec.stopPoints.join('; ')}`);
       } else {
         console.log(`      ${c.dim(spec.artifact)}`);

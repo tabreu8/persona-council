@@ -91,7 +91,8 @@ test('CLI compare reads runs from either store', () => {
 test('the walkthrough eval case is a product to walk, not a document', () => {
   const spec = loadCase('invite-flow');
   assert.equal(spec.kind, 'journey');
-  assert.match(spec.artifact, /invite-flow\/index\.html$/);
+  // Compare path segments, not a slash-separated string: Windows paths use '\'.
+  assert.deepEqual(spec.artifact.split(path.sep).slice(-2), ['invite-flow', 'index.html']);
   assert.ok(fs.existsSync(spec.artifact));
   assert.ok(spec.goal && spec.stopPoints.length, 'a walkthrough case needs a goal and stop points');
 
