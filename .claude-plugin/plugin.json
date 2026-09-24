@@ -1,7 +1,7 @@
 {
   "name": "persona-council",
   "description": "Persona thinking, isolated querying, debate panels, product walkthroughs with a think-aloud log, and a decision journal for Claude Code.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": {
     "name": "tabreu8",
     "url": "https://github.com/tabreu8"
