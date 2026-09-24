@@ -7,7 +7,7 @@ A framing is what the room is *asked to do*. A topology is how the seats are
 wired. They are independent: pick the framing from the user's intent, then the
 topology that serves it.
 
-Framings come in three kinds, and the kind decides which output contract the
+Framings come in four kinds, and the kind decides which output contract the
 seats are given. Getting this wrong is not cosmetic: a brainstorm run under an
 evaluative contract files ideas under "concerns", reports a room that was never
 disagreeing as suspicious unanimity, and banks a false "endorse" against every
@@ -39,6 +39,13 @@ seat's track record.
 | Framing | The question put to the room | Default topology |
 |---|---|---|
 | `react` | "You just saw this. What do you actually do next?" | fanout |
+
+**Experiential** — the room does not look at the thing, it uses it. Contract:
+`journey-contract.md`.
+
+| Framing | The question put to the room | Default topology |
+|---|---|---|
+| `walkthrough` | "Here's the product. Go and get this done, and think aloud." | fanout |
 
 Say which framing you used. "I ran this as a pre-mortem" tells the user far more
 about what they are reading than "I ran a fanout panel".
@@ -128,6 +135,19 @@ segment is intrigued is a panel of flattering fictions.
 
 Never average reactions into a sentiment. Report the split as behaviour.
 
+## walkthrough
+
+For usability and user-journey audits. `react` shows a person the thing;
+`walkthrough` hands them the product and a goal, and they act in it — clicking,
+typing, backtracking — logging what they did, saw, expected and thought at
+every step. Run by the `persona-walkthrough` skill, not by a panel.
+
+The walker is given the goal, never the route. The orchestrator, not the
+walker, audits the logs: completion, friction ranked by severity, gaps between
+what the persona expected and what it saw, and what nobody reached.
+
+Fanout, always. A walker that has seen another's route follows it.
+
 ---
 
 ## Choosing without being asked
@@ -136,6 +156,7 @@ Map intent to framing from how the user talks:
 
 - "give me ideas" / "brainstorm" / "what angles" / "what should we call it" → `ideate`
 - "how would X react" / "would this land" / "what would customers think" → `react`
+- "have X try it" / "can a new user do Y" / "walk through onboarding as X" → `walkthrough`
 - "what could go wrong" / "what am I missing" → `premortem`
 - "poke holes" / "tell me why I'm wrong" → `steelman`
 - "is this ready" / "does this pass" → `gate`

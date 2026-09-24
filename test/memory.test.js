@@ -500,6 +500,37 @@ const FULL_RECORDS = {
       recommended: [{ step: 'TRY-SENTINEL', because: 'BECAUSE-SENTINEL' }],
     },
   },
+  journey: {
+    kind: 'journey',
+    question: 'Q-journey',
+    framing: 'walkthrough',
+    product: 'PRODUCT-SENTINEL',
+    journeys: [{
+      persona: 'seat-one',
+      goal: 'GOAL-SENTINEL',
+      outcome: 'gave-up',
+      outcomeSummary: 'OUTCOMESUMMARY-SENTINEL',
+      steps: [{
+        n: 1, action: 'ACTION-SENTINEL', saw: 'SAW-SENTINEL', thought: 'THOUGHT-SENTINEL',
+        expected: 'EXPECTED-SENTINEL', felt: 'FELT-SENTINEL',
+      }],
+      almostQuit: 'ALMOSTQUIT-SENTINEL',
+      toAColleague: 'COLLEAGUE-SENTINEL',
+    }],
+    synthesis: {
+      summary: 'SUMMARY-SENTINEL',
+      completion: 'COMPLETION-SENTINEL',
+      friction: [{
+        persona: 'seat-one', step: 1, issue: 'ISSUE-SENTINEL', severity: 'blocker',
+        cause: 'CAUSE-SENTINEL', evidence: 'EVIDENCE-SENTINEL', fix: 'FIX-SENTINEL',
+      }],
+      expectationGaps: ['GAP-SENTINEL'],
+      worked: ['WORKED-SENTINEL'],
+      divergence: 'DIVERGENCE-SENTINEL',
+      nobodyReached: ['NOBODYREACHED-SENTINEL'],
+      recommended: [{ step: 'TRY-SENTINEL', because: 'BECAUSE-SENTINEL' }],
+    },
+  },
 };
 
 function sentinels(value, found = new Set()) {
@@ -549,4 +580,39 @@ test('only evaluative runs build persona track records', () => {
   assert.equal(memoryStats(root, config).decisions, 3);
   assert.equal(memoryStats(root, config).evaluative, 0);
   assert.deepEqual(memoryStats(root, config).awaitingRetro, [], 'a brainstorm never awaits an outcome');
+});
+
+test('journey friction renders worst-first, whatever order it was recorded in', () => {
+  const record = {
+    kind: 'journey',
+    question: 'Invite a teammate',
+    synthesis: {
+      friction: [
+        { severity: 'polish', issue: 'POLISH-ISSUE' },
+        { severity: 'blocker', issue: 'BLOCKER-ISSUE' },
+        { severity: 'minor', issue: 'MINOR-ISSUE' },
+      ],
+    },
+  };
+  for (const output of [renderMemoMarkdown(record), renderMemoHtml(record)]) {
+    const order = ['BLOCKER-ISSUE', 'MINOR-ISSUE', 'POLISH-ISSUE'].map((s) => output.indexOf(s));
+    assert.deepEqual([...order].sort((a, b) => a - b), order, 'blockers must lead');
+  }
+  assert.match(renderMemoMarkdown(record), /## Fix first|## Friction/);
+  assert.ok(!renderMemoMarkdown(record).includes('Confidence warning'), 'a journey is not a vote');
+});
+
+test('journey runs never build track records or await a retro', () => {
+  // Getting lost in an onboarding flow is not a prediction that can come true.
+  const root = sandbox();
+  const { config } = loadConfig(root);
+  writeDecision(root, config, {
+    kind: 'journey',
+    question: 'Can a first-time admin invite a teammate?',
+    recordedAt: '2026-09-24T10:00:00Z',
+    journeys: [{ persona: 'first-time-admin', outcome: 'gave-up', steps: [] }],
+  });
+
+  assert.deepEqual(calibration(root, config), []);
+  assert.deepEqual(memoryStats(root, config).awaitingRetro, []);
 });

@@ -9,7 +9,9 @@ under a heading called *concerns*. Worse, a room that was never disagreeing gets
 reported as suspicious unanimity, and — if the run is recorded — every seat
 banks a false "endorse" against its track record.
 
-So: three kinds of run, and the kind is recorded.
+So: three kinds of run here, and the kind is recorded. A fourth, `journey` —
+the persona uses the product instead of looking at it — has its own contract
+in `journey-contract.md`.
 
 | `kind` | The room is asked to | Contract |
 |---|---|---|

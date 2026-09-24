@@ -183,7 +183,7 @@ no to on its own, and a chairman weighing verdicts should know it.
 
 ---
 
-## Five tools, one door
+## Six tools, one door
 
 `/council` routes to the right one. You never have to remember the rest.
 
@@ -193,6 +193,7 @@ no to on its own, and a chairman weighing verdicts should know it.
 | **`persona-think`** | **yes** | — | A fast gut-check on live work |
 | **`persona-ask`** | no | 1 | A second opinion you can lean on |
 | **`persona-panel`** | no | N + chairman | A decision weighed from several angles |
+| **`persona-walkthrough`** | no | 1 per walker | Watching a persona actually use the product |
 | **`persona-retro`** | — | — | Closing the loop on what happened |
 
 `persona-think` is the **contaminated** one, and the skill says so out loud. The
@@ -219,13 +220,14 @@ how something **lands** with people who aren't evaluating it at all.
 
 Ask a persona to "endorse" a brainstorm and you get nonsense: fake verdicts,
 `confidence: low` on an idea, and the ideas themselves filed under *concerns*.
-So runs come in three kinds, and the kind is recorded:
+So runs come in four kinds, and the kind is recorded:
 
 | Kind | The room is asked to | You get back |
 |---|---|---|
 | **evaluative** | judge something that exists | verdicts, dissent, blocking concerns |
 | **generative** | produce options from its lens | ideas with provenance, clustered |
 | **reactions** | respond as people, not judges | behaviour — what they'd actually do next |
+| **journey** | use the real product toward a goal | a think-aloud log per step, audited |
 
 Only evaluative runs feed track records. There is no such thing as being right
 or wrong about an idea you proposed, and counting one as an endorsement is how a
@@ -247,6 +249,7 @@ by name.
 | "A or B?" | **options** | Ranked — plus what would flip second choice to first |
 | "break this" | **red team** | Attack, repair, then attack the repair |
 | "have them argue" | **debate** | Roundtable until something gives |
+| "have them try it" | **walkthrough** | Here's the product. Get this done, and think aloud |
 
 Two of these are worth calling out. The **pre-mortem** is the most underused —
 putting seats *after* the failure surfaces concrete mechanisms instead of vague
@@ -260,6 +263,44 @@ A generative run is synthesized completely differently: no consensus (nobody was
 disagreeing), no vote-counting. It clusters ideas, then names **the ones only one
 seat's lens could have produced** — the analogue of preserved dissent, and the
 entire return on convening a room instead of asking once.
+
+---
+
+## Don't ask them. Watch them.
+
+Every framing above still asks a persona what it *thinks*. The cheapest lie in
+product work is "the onboarding looks clean" — said by someone who never tried
+to onboard.
+
+> **you:** have the first-time admin try to invite a teammate, starting from the
+> marketing site
+
+`persona-walkthrough` hands the persona a **goal, never a route**, and the real
+product — through whatever the session can drive: a browser, a shell, an API.
+It works toward the goal as that person would, and logs every step:
+
+```markdown
+4. **Did:** clicked "Workspace" in the sidebar
+   **Expected:** a list of the people in my workspace
+   **Saw:** "Plan: Team · 8 seats · Next invoice Oct 1"
+   **Thought:** This is billing? I wanted people. Maybe it's under my avatar.
+   **Felt:** confused
+```
+
+Then the orchestrating agent — who has seen the product from the outside —
+**audits the journey**: did they finish, and did they *think* they finished;
+friction ranked blocker → polish, each tied to the step that proves it and
+re-checked before the product gets blamed; where what they expected diverged
+from what they saw; what worked and must survive a redesign; and everything
+past the first blocker that nobody reached.
+
+Two walkers with different traits are where it earns its keep. A step that
+stops the time-poor buyer but not the careful admin is a finding about your
+product's assumptions. A step that stops both is a blocker.
+
+The walker only uses what a real user has — no reading the source to get past a
+confusing screen — and it stops at anything irreversible: it goes up to the
+payment form, says whether it would pay and why, and doesn't.
 
 ---
 
@@ -372,7 +413,7 @@ Code, via [Vercel's open standard](https://github.com/vercel-labs/skills):
 npx skills add tabreu8/persona-council
 ```
 
-Installs just the six skills — no CLI, no memory journal, no `doctor`. Each one
+Installs just the seven skills — no CLI, no memory journal, no `doctor`. Each one
 carries its own `references/` copy of the docs it cites (derived from the same
 source the other two installs share, kept in sync by a test — see
 `scripts/sync-skill-references.mjs`), so it works standalone with nothing else
@@ -473,7 +514,7 @@ dispatching, so you can say "just two of them".
 
 ## Under the hood
 
-Zero runtime dependencies. 76 tests, `node --test`, no framework — including a
+Zero runtime dependencies. 79 tests, `node --test`, no framework — including a
 guard that every field the docs tell an agent to record actually reaches the
 memo, because "recorded and silently dropped" has been the most common bug here.
 
@@ -484,8 +525,8 @@ migrations. Instead they live in their own directory in a portable format, and
 the skills inject them into generic runners.
 
 ```
-skills/       create · think · ask · panel · retro · council
-agents/       persona-runner (read-only) · persona-chairman
+skills/       create · think · ask · panel · walkthrough · retro · council
+agents/       persona-runner (read-only) · persona-walker · persona-chairman
 reference/    the shared docs the skills cite at runtime
 evals/        artifacts with planted flaws, and the answer keys
 src/ bin/     installer, persona resolver, memory store, memo renderer

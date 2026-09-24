@@ -33,6 +33,36 @@ function label(verdict) {
   return VERDICT_LABELS[verdict] || verdict || '—';
 }
 
+const SEVERITY_ORDER = ['blocker', 'major', 'minor', 'polish'];
+
+const SEVERITY_TONE = { blocker: 'no', major: 'maybe', minor: 'unknown', polish: 'unknown' };
+
+const OUTCOME_TONE = {
+  completed: 'yes',
+  'completed-with-help': 'maybe',
+  'gave-up': 'no',
+  blocked: 'no',
+  'stopped-at-stop-point': 'unknown',
+  'out-of-budget': 'unknown',
+};
+
+/** Worst first, so the blockers are what a reader sees before anything else. */
+function bySeverity(friction) {
+  const rank = (f) => {
+    const i = SEVERITY_ORDER.indexOf(f.severity);
+    return i === -1 ? SEVERITY_ORDER.length : i;
+  };
+  return [...friction].sort((a, b) => rank(a) - rank(b));
+}
+
+function stepCount(steps) {
+  return `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`;
+}
+
+function isJourney(record) {
+  return record.kind === 'journey';
+}
+
 /** Runs that judge something. Only these produce verdicts or track records. */
 export function isEvaluative(record) {
   return (record.kind || 'evaluative') === 'evaluative';
@@ -62,6 +92,7 @@ export function renderMemoMarkdown(record) {
     record.topology ? `**Mode:** ${record.topology}` : null,
     record.framing ? `**Framing:** ${record.framing}` : null,
     record.roster ? `**Roster:** ${record.roster}` : null,
+    record.product ? `**Product:** ${record.product}` : null,
     record.mode === 'scratch' ? '**Scratch run** — not of record' : null,
   ].filter(Boolean);
   if (meta.length) lines.push(meta.join(' · '), '');
@@ -94,6 +125,44 @@ export function renderMemoMarkdown(record) {
       lines.push('');
     }
   }
+
+  if ((record.journeys || []).length) {
+    lines.push('## Journeys', '');
+    for (const j of record.journeys) {
+      lines.push(`**${j.persona}**${j.outcome ? ` · ${j.outcome}` : ''}${(j.steps || []).length ? ` · ${stepCount(j.steps)}` : ''}`, '');
+      if (j.goal) lines.push(`*Goal:* ${j.goal}`, '');
+      (j.steps || []).forEach((step, i) => {
+        lines.push(`${step.n ?? i + 1}. **Did:** ${step.action || '—'}`);
+        if (step.expected) lines.push(`   - *Expected:* ${step.expected}`);
+        if (step.saw) lines.push(`   - *Saw:* ${step.saw}`);
+        if (step.thought) lines.push(`   - *Thought:* ${step.thought}`);
+        if (step.felt) lines.push(`   - *Felt:* ${step.felt}`);
+      });
+      if ((j.steps || []).length) lines.push('');
+      if (j.outcomeSummary) lines.push(`*Outcome:* ${j.outcomeSummary}`);
+      if (j.almostQuit) lines.push(`*Almost quit:* ${j.almostQuit}`);
+      if (j.toAColleague) lines.push(`*To a colleague:* "${j.toAColleague}"`);
+      lines.push('');
+    }
+  }
+
+  if (s.completion) lines.push('## Completion', '', s.completion, '');
+
+  if ((s.friction || []).length) {
+    lines.push('## Friction', '');
+    for (const f of bySeverity(s.friction)) {
+      const where = [f.persona, f.step != null ? `step ${f.step}` : null, f.cause].filter(Boolean).join(' · ');
+      lines.push(`- **${f.severity || 'unrated'}**${where ? ` · ${where}` : ''} — ${f.issue || f}`);
+      if (f.evidence) lines.push(`  - *Evidence:* ${f.evidence}`);
+      if (f.fix) lines.push(`  - *Fix:* ${f.fix}`);
+    }
+    lines.push('');
+  }
+
+  if ((s.expectationGaps || []).length) lines.push('## Expectation gaps', '', ...s.expectationGaps.map((g) => `- ${g}`), '');
+  if ((s.worked || []).length) lines.push('## What worked', '', ...s.worked.map((w) => `- ${w}`), '');
+  if (s.divergence) lines.push('## Where the journeys diverged', '', s.divergence, '');
+  if ((s.nobodyReached || []).length) lines.push('## Nobody reached', '', ...s.nobodyReached.map((n) => `- ${n}`), '');
 
   if ((s.clusters || []).length) {
     lines.push('## Clusters', '');
@@ -165,7 +234,7 @@ export function renderMemoMarkdown(record) {
 
   const plan = s.actionPlan || s.recommended || [];
   if (plan.length) {
-    lines.push(isEvaluative(record) ? '## Action plan' : '## What to try first', '');
+    lines.push(isEvaluative(record) ? '## Action plan' : (isJourney(record) ? '## Fix first' : '## What to try first'), '');
     plan.forEach((step, i) => {
       const text = step.step || step;
       const closes = step.closes ? ` — closes: ${step.closes}` : (step.because ? ` — ${step.because}` : '');
@@ -263,6 +332,10 @@ td:last-child, th:last-child { padding-right: 0; }
 .rx { margin-bottom: .55rem; font-size: .93rem; }
 .rx span { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
            color: var(--muted); font-weight: 650; margin-bottom: .1rem; }
+.steps { margin: .4rem 0 .6rem; }
+.steps li { margin-bottom: .8rem; font-size: .93rem; }
+.steps .rx { margin: .25rem 0 0; font-size: .88rem; }
+.steps .rx span { display: inline; margin-right: .35rem; }
 .cmm { margin: .8rem 0 0; font-size: .88rem; color: var(--muted); }
 .cmm span { font-weight: 650; }
 .dispute { border-left: 2px solid var(--line); padding: .1rem 0 .1rem 1rem; margin: 0 0 1.2rem; }
@@ -286,7 +359,7 @@ export function renderMemoHtml(record, { title } = {}) {
   const parts = [];
 
   parts.push(`<title>${esc(heading.slice(0, 90))}</title>`, `<style>${STYLE}</style>`, '<div class="wrap">');
-  const kindLabel = { generative: 'Idea set', reactions: 'Reactions' }[record.kind] || 'Decision memo';
+  const kindLabel = { generative: 'Idea set', reactions: 'Reactions', journey: 'User journey audit' }[record.kind] || 'Decision memo';
   parts.push(`<p class="eyebrow">${record.mode === 'scratch' ? 'Scratch run — not of record' : kindLabel}</p>`);
   parts.push(`<h1>${esc(heading)}</h1>`);
 
@@ -295,6 +368,7 @@ export function renderMemoHtml(record, { title } = {}) {
     record.topology ? `<span>${esc(record.topology)}</span>` : '',
     record.framing ? `<span>${esc(record.framing)}</span>` : '',
     record.roster ? `<span>roster: ${esc(record.roster)}</span>` : '',
+    record.product ? `<span>product: ${esc(record.product)}</span>` : '',
     record.cost?.subAgents ? `<span>${record.cost.subAgents} agents</span>` : '',
   ].join('');
   if (meta) parts.push(`<p class="meta">${meta}</p>`);
@@ -323,6 +397,43 @@ export function renderMemoHtml(record, { title } = {}) {
       ${r.toAColleague ? `<div class="rx"><span>To a colleague</span>&ldquo;${esc(r.toAColleague)}&rdquo;</div>` : ''}
     </div>`).join(''));
   }
+
+  if ((record.journeys || []).length) {
+    const row = (k, v) => (v ? `<div class="rx"><span>${k}</span>${esc(v)}</div>` : '');
+    parts.push('<h2>Journeys</h2>', record.journeys.map((j) => `<div class="seat-block">
+      <div class="seat-head"><span class="seat">${esc(j.persona)}</span>
+        ${j.outcome ? `<span class="chip ${OUTCOME_TONE[j.outcome] || 'unknown'}">${esc(j.outcome)}</span>` : ''}
+        ${(j.steps || []).length ? `<span class="conf">${stepCount(j.steps)}</span>` : ''}</div>
+      ${row('Goal', j.goal)}
+      ${(j.steps || []).length ? `<ol class="steps">${j.steps.map((step, i) => `<li value="${esc(step.n ?? i + 1)}"><strong>${esc(step.action || '—')}</strong>
+        ${row('Expected', step.expected)}${row('Saw', step.saw)}${row('Thought', step.thought)}${row('Felt', step.felt)}</li>`).join('')}</ol>` : ''}
+      ${row('Outcome', j.outcomeSummary)}
+      ${row('Almost quit', j.almostQuit)}
+      ${j.toAColleague ? `<div class="rx"><span>To a colleague</span>&ldquo;${esc(j.toAColleague)}&rdquo;</div>` : ''}
+    </div>`).join(''));
+  }
+
+  if (s.completion) parts.push('<h2>Completion</h2>', `<p>${esc(s.completion)}</p>`);
+
+  if ((s.friction || []).length) {
+    parts.push('<h2>Friction</h2>', bySeverity(s.friction).map((f) => `<div class="seat-block">
+      <div class="seat-head"><span class="chip ${SEVERITY_TONE[f.severity] || 'unknown'}">${esc(f.severity || 'unrated')}</span>
+        ${f.persona ? `<span class="seat">${esc(f.persona)}</span>` : ''}
+        ${f.step != null ? `<span class="conf">step ${esc(f.step)}</span>` : ''}
+        ${f.cause ? `<span class="conf">${esc(f.cause)}</span>` : ''}</div>
+      <div>${esc(f.issue || f)}</div>
+      ${f.evidence ? `<p class="cmm"><span>Evidence:</span> ${esc(f.evidence)}</p>` : ''}
+      ${f.fix ? `<p class="cmm"><span>Fix:</span> ${esc(f.fix)}</p>` : ''}
+    </div>`).join(''));
+  }
+
+  const list = (heading, items) => {
+    if ((items || []).length) parts.push(`<h2>${heading}</h2>`, `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`);
+  };
+  list('Expectation gaps', s.expectationGaps);
+  list('What worked', s.worked);
+  if (s.divergence) parts.push('<h2>Where the journeys diverged</h2>', `<p>${esc(s.divergence)}</p>`);
+  list('Nobody reached', s.nobodyReached);
 
   if ((s.clusters || []).length) {
     parts.push('<h2>Clusters</h2>', s.clusters.map((cl) => `<div class="dispute">
@@ -400,7 +511,7 @@ export function renderMemoHtml(record, { title } = {}) {
       const note = step.closes ? `— closes: ${step.closes}` : (step.because || '');
       return `<li>${text}${note ? ` <span class="closes">${esc(note)}</span>` : ''}</li>`;
     }).join('');
-    parts.push(`<h2>${isEvaluative(record) ? 'Action plan' : 'What to try first'}</h2>`, `<ol>${items}</ol>`);
+    parts.push(`<h2>${isEvaluative(record) ? 'Action plan' : (isJourney(record) ? 'Fix first' : 'What to try first')}</h2>`, `<ol>${items}</ol>`);
   }
 
   if (record.revisitWhen) parts.push('<h2>Revisit when</h2>', `<p>${esc(record.revisitWhen)}</p>`);
@@ -422,7 +533,7 @@ export function renderMemoHtml(record, { title } = {}) {
     </div>`);
   }
 
-  const seats = (record.personas || record.verdicts || []).map((p) => p.id || p.persona).filter(Boolean);
+  const seats = (record.personas || record.verdicts || record.journeys || []).map((p) => p.id || p.persona).filter(Boolean);
   parts.push(`<footer>Produced by persona-council${seats.length ? ` · seats: ${esc(seats.join(', '))}` : ''}${record.id ? ` · ${esc(record.id)}` : ''}<br>
     Personas are lenses, not experts. They surface considerations; they do not supply facts.</footer>`);
   parts.push('</div>');

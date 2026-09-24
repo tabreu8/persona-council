@@ -29,8 +29,9 @@ test('the README test count matches the suite', () => {
     const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
     const topLevel = (source.match(/^test\(/gm) || []).length;
     const inLoop = (source.match(/^  test\(/gm) || []).length;
-    // The FULL_RECORDS generator runs its one indented test() once per kind.
-    const kinds = source.includes('Object.entries(FULL_RECORDS)') ? 3 : 1;
+    // The FULL_RECORDS generator runs its one indented test() once per kind:
+    // evaluative, generative, reactions, journey.
+    const kinds = source.includes('Object.entries(FULL_RECORDS)') ? 4 : 1;
     actual += topLevel + inLoop * kinds;
   }
   assert.equal(Number(claimed[1]), actual,

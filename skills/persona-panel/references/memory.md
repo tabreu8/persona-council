@@ -97,9 +97,10 @@ Written by the panel run, at `<decisionsPath>/<id>/decision.json`:
 }
 ```
 
-`kind` is `evaluative`, `generative` or `reactions` (see
-`contribution-contracts.md`). It decides the record's shape - `verdicts` for
-evaluative runs, `contributions` for generative, `reactions` for reactive - and
+`kind` is `evaluative`, `generative`, `reactions` (see
+`contribution-contracts.md`) or `journey` (see `journey-contract.md`). It
+decides the record's shape - `verdicts` for evaluative runs, `contributions`
+for generative, `reactions` for reactive, `journeys` for walkthroughs - and
 only evaluative runs feed track records or accept an outcome. Recording a
 brainstorm as evaluative banks a false endorsement against every seat that
 contributed, which is how a good persona gets flagged as too agreeable.

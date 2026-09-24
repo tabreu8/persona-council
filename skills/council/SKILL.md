@@ -1,6 +1,6 @@
 ---
 name: council
-description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, retro) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, for a brainstorm from several viewpoints, for how an audience or customer would react to something, or invokes /council without saying which mode they want.
+description: Entry point for persona work — routes a request to the right persona capability (create, think, ask, panel, walkthrough, retro) and picks the cheapest rung that answers the question. Use when the user asks for the council, for personas generally, for feedback or perspectives on something, for a brainstorm from several viewpoints, for how an audience or customer would react to something, for a persona to actually use or test-drive the product and audit the user journey, or invokes /council without saying which mode they want.
 ---
 
 # council
@@ -10,7 +10,7 @@ description: Entry point for persona work — routes a request to the right pers
 > (plugin install), then `references/<file>` in this skill's own directory
 > (installed with `npx skills add` or any other Agent Skills-compatible installer).
 
-One door. Read the request, pick the capability, do not make the user learn five
+One door. Read the request, pick the capability, do not make the user learn six
 command names.
 
 ## Routing
@@ -23,6 +23,7 @@ command names.
 | "the room", "panel", "council", "several views", "debate" | `persona-panel` | many seats |
 | "brainstorm", "give me ideas", "what angles", "what should we call it" | `persona-panel` (`ideate`) | generative, not a judgement |
 | "how would X react", "would this land", "what would customers think" | `persona-panel` (`react`) | reactions, not verdicts |
+| "have X try it", "can a new user actually do Y", "walk through signup as X", "audit the onboarding" | `persona-walkthrough` | behaviour in the real product, audited |
 | "it went badly", "we shipped it", "who was right" | `persona-retro` | close the loop |
 | "which personas do I have" | `persona-council list` | just answer it |
 
@@ -32,6 +33,10 @@ Ambiguous cases:
   relevant seat, and offer the panel as the next rung up. Do not spend five
   agents on an unprompted "what do you think".
 - **They name several people** → panel, but confirm the spend first.
+- **"How would X react to the signup page" vs "have X sign up"** → reacting to
+  a thing is `react`; using it toward a goal is `persona-walkthrough`. If the
+  product can be driven and the question is whether people can *get through*
+  it, walk it. See `journey-contract.md`.
 - **No personas exist yet** → do not run anything. Say what the council needs and
   offer `persona-create`. One good persona beats an empty panel.
 
@@ -46,6 +51,7 @@ From `panel-topologies.md`:
 | `fanout` | N + 1 |
 | `chain` | N + 1, anchored |
 | `roundtable` | N x rounds + 1 |
+| `walkthrough` | 1 per walker, plus your audit |
 
 Recommend the cheapest rung that answers the question, and say what the next rung
 up would add:
@@ -62,7 +68,8 @@ See `framings.md`. Map intent, do not ask them to choose:
 "give me ideas" → `ideate` · "how would they react" → `react` ·
 "what am I missing" → `premortem` · "tell me why I'm wrong" → `steelman` ·
 "is this ready" → `gate` · "A or B" → `options` · "break this" → `redteam` ·
-"have them argue" → `debate` · otherwise → `review`.
+"have them argue" → `debate` · "have them try it" → `walkthrough` ·
+otherwise → `review`.
 
 **Check the kind before anything else.** If the thing being discussed does not
 exist yet, the run is generative and the verdict contract is the wrong tool -

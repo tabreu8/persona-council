@@ -32,9 +32,13 @@ test('init installs skills, commands, agents and shared references', () => {
   for (const expected of [
     '.claude/skills/persona-create/SKILL.md',
     '.claude/skills/persona-panel/SKILL.md',
+    '.claude/skills/persona-walkthrough/SKILL.md',
     '.claude/commands/persona-ask.md',
+    '.claude/commands/persona-walkthrough.md',
     '.claude/agents/persona-runner.md',
+    '.claude/agents/persona-walker.md',
     '.claude/persona-council/verdict-contract.md',
+    '.claude/persona-council/journey-contract.md',
     '.claude/persona-council.config.json',
   ]) {
     assert.ok(fs.existsSync(path.join(root, expected)), `missing ${expected}`);
