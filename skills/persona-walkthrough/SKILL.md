@@ -51,6 +51,12 @@ Check which action tools this session really has before promising anything:
 If nothing can drive it, say so and offer a **paper walkthrough**: the walker
 steps through screenshots, a design file or the docs in order. Label the run as
 paper in the audit and the record - it tests comprehension, not interaction.
+**Check the driver before anyone walks with it.** Load the entry page yourself
+and compare what the tool reports with what a person would see. A driver that
+lists hidden elements - a closed dialog's buttons, a collapsed menu - shows the
+walker things no user could, and every step after that is suspect. Note any
+quirk you cannot fix in the audit's setup notes.
+
 Dispatch a paper walk to `persona-runner` instead of `persona-walker`: it needs
 to open the frames, and reading files is all the runner can do.
 
@@ -77,8 +83,17 @@ Confirm first, in one line:
 > at the marketing site, via the browser. Stops before any real invite is sent.
 > 2 walkers, 25 steps each, then I audit. Go?
 
-One `persona-walker` per persona, in a single message. The brief section of
-the prompt is the mission:
+One `persona-walker` per persona, in a single message. Frame the prompt as what
+it is - a usability study with the persona as the participant - rather than
+"you are this person": it reads more plainly, and bare identity roleplay is
+likelier to be refused. Open with:
+
+```
+This is a usability study of <product>. You play the participant described
+below, using the product the way they would, and write a think-aloud log.
+```
+
+then the persona file, then the mission:
 
 ```
 Your goal:          <the goal, in the persona's words>
@@ -164,7 +179,11 @@ with how the walker felt about it.
 with planted usability problems. Walk it (open its `index.html` in the browser
 tool), audit, save the audit, and score it with `eval score`. It is how you
 find out whether your walkers and your audit catch what they should - never
-show the walker or yourself the `.flaws.json` beforehand.
+show the walker or yourself the `.flaws.json` beforehand. If you have seen it
+(you wrote the case, or read it earlier), your audit is not blind: say so, and
+lean on the grader - `eval rubric`, a fresh sub-agent, `eval score --judged` -
+rather than the keyword score, which credits a flaw for being named even when
+the audit says nobody reached it.
 
 ## When a walk goes wrong
 

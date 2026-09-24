@@ -163,6 +163,7 @@ export function renderMemoMarkdown(record) {
   if ((s.worked || []).length) lines.push('## What worked', '', ...s.worked.map((w) => `- ${w}`), '');
   if (s.divergence) lines.push('## Where the journeys diverged', '', s.divergence, '');
   if ((s.nobodyReached || []).length) lines.push('## Nobody reached', '', ...s.nobodyReached.map((n) => `- ${n}`), '');
+  if ((s.setupNotes || []).length) lines.push('## Test setup notes', '', ...s.setupNotes.map((n) => `- ${n}`), '');
 
   if ((s.clusters || []).length) {
     lines.push('## Clusters', '');
@@ -422,6 +423,7 @@ export function renderMemoHtml(record, { title } = {}) {
   list('What worked', s.worked);
   if (s.divergence) parts.push('<h2>Where the journeys diverged</h2>', `<p>${esc(s.divergence)}</p>`);
   list('Nobody reached', s.nobodyReached);
+  list('Test setup notes', s.setupNotes);
 
   if ((s.clusters || []).length) {
     parts.push('<h2>Clusters</h2>', s.clusters.map((cl) => `<div class="dispute">

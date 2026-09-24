@@ -154,7 +154,11 @@ quality, grounded in specific steps.
    what a redesign must not break.
 6. **What nobody reached.** Parts of the journey no walker got to, because they
    quit or were stopped first. Nothing past the first blocker has been tested.
-7. **Fix first.** The shortest list of changes that would most improve
+7. **Setup notes.** Anything about the test itself that shaped a step: a
+   browser driver that showed something a user could not see, a page that
+   would not load, a fixture limitation. It keeps a harness problem from being
+   read as a product finding, and it must be written down, not just noticed.
+8. **Fix first.** The shortest list of changes that would most improve
    completion, each tied to the friction it closes, and how to check it helped
    (usually: re-walk with the same persona and goal).
 
@@ -205,6 +209,7 @@ can finish it" - so that a later re-walk can be compared against it.
     "worked": ["..."],
     "divergence": "...",
     "nobodyReached": ["..."],
+    "setupNotes": ["<anything about the test setup that shaped a step - a driver quirk, a fixture limitation>"],
     "recommended": [{ "step": "...", "because": "..." }]
   },
   "cost": { "subAgents": 1 }

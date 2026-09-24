@@ -464,6 +464,7 @@ const FULL_RECORDS = {
       worked: ['WORKED-SENTINEL'],
       divergence: 'DIVERGENCE-SENTINEL',
       nobodyReached: ['NOBODYREACHED-SENTINEL'],
+      setupNotes: ['SETUPNOTE-SENTINEL'],
       recommended: [{ step: 'TRY-SENTINEL', because: 'BECAUSE-SENTINEL' }],
     },
   },
